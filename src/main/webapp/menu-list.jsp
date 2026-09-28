@@ -209,9 +209,8 @@
 
     <br>
 
-    <a class="btn btn-back"
-       href="${pageContext.request.contextPath}/admin-dashboard.jsp">
-        Back to Dashboard
+    <a href="${pageContext.request.contextPath}/order?action=add">
+        Back to POS
     </a>
 
 </div>

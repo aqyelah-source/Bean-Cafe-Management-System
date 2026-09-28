@@ -163,7 +163,11 @@ public class OrderDAO implements OrderDAOInterface {
         Order order = null;
 
         String orderSql = "SELECT * FROM orders WHERE order_id = ?";
-        String itemSql = "SELECT * FROM order_items WHERE order_id = ?";
+        String itemSql =
+            "SELECT oi.*, m.menu_name "
+            + "FROM order_items oi "
+            + "JOIN menu m ON oi.menu_id = m.menu_id "
+            + "WHERE oi.order_id = ?";
 
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement orderStmt =
@@ -209,6 +213,7 @@ public class OrderDAO implements OrderDAOInterface {
                                     rs.getInt("order_item_id"));
                             item.setOrderId(rs.getInt("order_id"));
                             item.setMenuId(rs.getInt("menu_id"));
+                            item.setMenuName(rs.getString("menu_name"));
                             item.setQuantity(rs.getInt("quantity"));
                             item.setSubtotal(rs.getDouble("subtotal"));
 

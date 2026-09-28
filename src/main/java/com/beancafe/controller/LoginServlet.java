@@ -36,9 +36,16 @@ public class LoginServlet extends HttpServlet {
             session.setAttribute("role", user.getRole());
 
             if ("Admin".equalsIgnoreCase(user.getRole())) {
-                response.sendRedirect("admin-dashboard.jsp");
-            } else {
-                response.sendRedirect("staff-dashboard.jsp");
+
+                response.sendRedirect(
+                    request.getContextPath() + "/admin-dashboard.jsp"
+                );
+
+            } else if ("Staff".equalsIgnoreCase(user.getRole())) {
+
+                response.sendRedirect(
+                    request.getContextPath() + "/order?action=add"
+                );
             }
         } else {
             // invalid credentials -> show error back on login.jsp

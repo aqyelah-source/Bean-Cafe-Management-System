@@ -1,16 +1,25 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ page import="java.util.List" %>
 <%@ page import="com.beancafe.model.Order" %>
+<%@ page import="com.beancafe.model.OrderItem" %>
 
 <%
-    // Make sure user is logged in
-    if (session.getAttribute("role") == null) {
-        response.sendRedirect("login.jsp");
+    // ==============================
+    // SESSION CHECK
+    // ==============================
+    if (session == null || session.getAttribute("userId") == null) {
+        response.sendRedirect(request.getContextPath() + "/login.jsp");
         return;
     }
 
+    String name = (String) session.getAttribute("name");
+    String role = (String) session.getAttribute("role");
+
     List<Order> orderList =
             (List<Order>) request.getAttribute("orderList");
+
+    Order selectedOrder =
+            (Order) request.getAttribute("selectedOrder");
 
     Order searchedOrder =
             (Order) request.getAttribute("searchedOrder");
@@ -18,268 +27,763 @@
     Boolean searchPerformed =
             (Boolean) request.getAttribute("searchPerformed");
 
-    String success =
-            request.getParameter("success");
-
-    String error =
-            request.getParameter("error");
-
-    String role =
-            (String) session.getAttribute("role");
+    if (searchPerformed == null) {
+        searchPerformed = false;
+    }
 %>
 
 <!DOCTYPE html>
 <html>
-
 <head>
-
     <meta charset="UTF-8">
-
-    <title>Order Management - Bean Cafe</title>
+    <title>Bean Cafe - Order Management</title>
 
     <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
 
         body {
             font-family: Arial, sans-serif;
-            background-color: #f5f0eb;
-            margin: 0;
+            background: #f7f1e8;
+            color: #3b2314;
         }
 
-        header {
-            background-color: #4b2e1e;
-            color: white;
-            padding: 16px 24px;
+        /* ================= HEADER ================= */
+
+       .header {
+            height: 90px;
+            background: #fffaf4;
+            border-bottom: 1px solid #e3d5c8;
             display: flex;
-            justify-content: space-between;
             align-items: center;
+            padding: 0 28px;
+            gap: 26px;
         }
 
-        header h2 {
-            margin: 0;
+        .brand {
+            font-size: 24px;
+            font-weight: bold;
+            color: #2f180c;
         }
 
-        header a {
+        .staff-badge {
+            background: #3b2314;
             color: white;
-            text-decoration: none;
-            background-color: #6f4e37;
-            padding: 8px 14px;
-            border-radius: 4px;
-        }
-
-        .container {
-            width: 90%;
-            margin: 30px auto;
-            background-color: white;
-            padding: 25px;
-            border-radius: 8px;
-            box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-        }
-
-        h1 {
-            color: #4b2e1e;
-            margin-top: 0;
-        }
-
-        .top-section {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            gap: 20px;
-            margin-bottom: 20px;
-            flex-wrap: wrap;
-        }
-
-        .search-form {
-            display: flex;
-            gap: 8px;
-        }
-
-        .search-form input {
-            padding: 9px;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-        }
-
-        .btn {
-            display: inline-block;
-            padding: 9px 14px;
-            border: none;
-            border-radius: 4px;
-            text-decoration: none;
-            cursor: pointer;
-            font-size: 14px;
-        }
-
-        .btn-add {
-            background-color: #4b2e1e;
-            color: white;
-        }
-
-        .btn-search {
-            background-color: #6f4e37;
-            color: white;
-        }
-
-        .btn-view {
-            background-color: #4b2e1e;
-            color: white;
-        }
-
-        .btn-cancel {
-            background-color: #b04a4a;
-            color: white;
-        }
-
-        .btn-back {
-            background-color: #777;
-            color: white;
-            margin-top: 20px;
-        }
-
-        .btn:hover {
-            opacity: 0.9;
-        }
-
-        .message-success {
-            background-color: #d4edda;
-            color: #155724;
-            padding: 12px;
-            border-radius: 5px;
-            margin-bottom: 20px;
-        }
-
-        .message-error {
-            background-color: #f8d7da;
-            color: #721c24;
-            padding: 12px;
-            border-radius: 5px;
-            margin-bottom: 20px;
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 15px;
-        }
-
-        th {
-            background-color: #4b2e1e;
-            color: white;
-            padding: 12px;
-            text-align: left;
-        }
-
-        td {
-            padding: 12px;
-            border-bottom: 1px solid #ddd;
-        }
-
-        tr:hover {
-            background-color: #f8f5f2;
-        }
-
-        .status {
+            padding: 6px 13px;
+            border-radius: 20px;
+            font-size: 12px;
             font-weight: bold;
         }
 
-        .action-buttons {
+        .nav {
             display: flex;
-            gap: 6px;
-            flex-wrap: wrap;
+            align-items: center;
+            gap: 10px;
         }
 
-        .no-orders {
+        .nav a {
+            color: #6f4e37;
+            text-decoration: none;
+            font-size: 15px;
+            font-weight: 600;
+            padding: 12px 17px;
+            border-radius: 24px;
+            transition: 0.2s;
+        }
+
+        .nav a:hover {
+            background: #eee3d8;
+            color: #3b2314;
+        }
+
+        /* Manage Orders is active on this page */
+        .nav a.active {
+            background: #3b2314;
+            color: white;
+        }
+
+        .user-area {
+            margin-left: auto;
+            display: flex;
+            align-items: center;
+            gap: 25px;
+        }
+
+        .user-info {
+            display: flex;
+            flex-direction: column;
             text-align: center;
-            padding: 20px;
+            color: #2f180c;
+            font-size: 14px;
         }
 
-        .search-title {
-            color: #4b2e1e;
-            margin-top: 25px;
+        .user-info span {
+            color: #8b6f5c;
+            font-size: 12px;
+            margin-top: 2px;
         }
 
+        .logout {
+            background: #3b2314;
+            color: white;
+            text-decoration: none;
+            padding: 10px 18px;
+            border-radius: 22px;
+            font-size: 13px;
+            font-weight: bold;
+            transition: 0.2s;
+        }
+
+        .logout:hover {
+            background: #6f4e37;
+            color: white;
+        }
+        /* ================= MAIN ================= */
+
+        .container {
+            max-width: 1200px;
+            margin: 35px auto;
+            padding: 0 25px;
+        }
+
+        .page-top {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 25px;
+        }
+
+        .page-title h1 {
+            font-size: 28px;
+            margin-bottom: 6px;
+        }
+
+        .page-title p {
+            color: #816d60;
+            font-size: 14px;
+        }
+
+        .new-order-btn {
+            display: inline-block;
+            text-decoration: none;
+            background: #3b2314;
+            color: white;
+            padding: 11px 20px;
+            border-radius: 22px;
+            font-size: 14px;
+            font-weight: bold;
+        }
+
+        .new-order-btn:hover {
+            background: #6f4e37;
+        }
+
+        /* ================= STATS ================= */
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+
+        .stat-card {
+            background: white;
+            border-radius: 14px;
+            padding: 18px;
+            border: 1px solid #eadfd3;
+        }
+
+        .stat-label {
+            color: #8b7769;
+            font-size: 12px;
+            margin-bottom: 7px;
+        }
+
+        .stat-value {
+            font-size: 24px;
+            font-weight: bold;
+        }
+
+        /* ================= FILTER ================= */
+
+        .toolbar {
+            background: white;
+            border: 1px solid #eadfd3;
+            border-radius: 14px;
+            padding: 18px;
+            margin-bottom: 18px;
+        }
+
+        .tabs {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 15px;
+        }
+
+        .tab {
+            border: 1px solid #dac9bb;
+            background: #fff;
+            color: #5c4637;
+            border-radius: 20px;
+            padding: 8px 15px;
+            cursor: pointer;
+            font-size: 13px;
+        }
+
+        .tab:hover,
+        .tab.active {
+            background: #3b2314;
+            color: white;
+            border-color: #3b2314;
+        }
+
+        .search-row {
+            display: flex;
+            gap: 10px;
+        }
+
+        .search-row input {
+            flex: 1;
+            padding: 11px 14px;
+            border: 1px solid #d9c9bc;
+            border-radius: 8px;
+            outline: none;
+        }
+
+        .search-row input:focus {
+            border-color: #6f4e37;
+        }
+
+        .search-btn,
+        .show-all-btn {
+            border: none;
+            border-radius: 8px;
+            padding: 10px 18px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .search-btn {
+            background: #6f4e37;
+            color: white;
+        }
+
+        .show-all-btn {
+            background: #eee4da;
+            color: #3b2314;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+        }
+
+        /* ================= ORDER LIST ================= */
+
+        .orders-card {
+            background: white;
+            border: 1px solid #eadfd3;
+            border-radius: 14px;
+            overflow: hidden;
+        }
+
+        .orders-heading {
+            padding: 18px 20px;
+            font-size: 16px;
+            font-weight: bold;
+            border-bottom: 1px solid #eee4da;
+        }
+
+        .order-row {
+            display: grid;
+            grid-template-columns: 0.8fr 1fr 1.8fr 1fr 1fr;
+            align-items: center;
+            gap: 10px;
+            padding: 17px 20px;
+            border-bottom: 1px solid #f0e7df;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .order-row:last-child {
+            border-bottom: none;
+        }
+
+        .order-row:hover {
+            background: #faf6f1;
+        }
+
+        .order-id {
+            font-weight: bold;
+        }
+
+        .small-text {
+            font-size: 13px;
+            color: #806d60;
+        }
+
+        .price {
+            font-weight: bold;
+        }
+
+        /* ================= STATUS ================= */
+
+        .status {
+            display: inline-block;
+            width: fit-content;
+            padding: 6px 11px;
+            border-radius: 15px;
+            font-size: 11px;
+            font-weight: bold;
+        }
+
+        .pending {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .preparing {
+            background: #dbeafe;
+            color: #1e4f91;
+        }
+
+        .ready {
+            background: #d1fae5;
+            color: #17603a;
+        }
+
+        .completed {
+            background: #e7e5e4;
+            color: #57534e;
+        }
+
+        .cancelled {
+            background: #fde2e2;
+            color: #9b2c2c;
+        }
+
+        /* ================= EMPTY ================= */
+
+        .empty {
+            text-align: center;
+            padding: 45px 20px;
+            color: #8b7769;
+        }
+
+        /* ================= DRAWER ================= */
+
+        .overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.35);
+            z-index: 90;
+        }
+
+        .drawer {
+            position: fixed;
+            top: 0;
+            right: 0;
+            width: 430px;
+            max-width: 92%;
+            height: 100vh;
+            background: #fffaf4;
+            z-index: 100;
+            box-shadow: -5px 0 20px rgba(0,0,0,0.18);
+            overflow-y: auto;
+        }
+
+        .drawer-header {
+            background: #3b2314;
+            color: white;
+            padding: 22px 25px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .drawer-header h2 {
+            font-size: 21px;
+        }
+
+        .close-btn {
+            color: white;
+            text-decoration: none;
+            font-size: 26px;
+            line-height: 1;
+        }
+
+        .drawer-content {
+            padding: 25px;
+        }
+
+        .detail-section {
+            background: white;
+            border: 1px solid #eadfd3;
+            border-radius: 12px;
+            padding: 18px;
+            margin-bottom: 17px;
+        }
+
+        .detail-title {
+            font-size: 13px;
+            color: #8b7769;
+            margin-bottom: 12px;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            gap: 15px;
+            margin-bottom: 10px;
+            font-size: 14px;
+        }
+
+        .info-row:last-child {
+            margin-bottom: 0;
+        }
+
+        .info-label {
+            color: #806d60;
+        }
+
+        /* ================= ITEMS ================= */
+
+        .item-row {
+            display: flex;
+            justify-content: space-between;
+            gap: 15px;
+            padding: 11px 0;
+            border-bottom: 1px solid #eee4da;
+        }
+
+        .item-row:last-child {
+            border-bottom: none;
+        }
+
+        .item-name {
+            font-weight: bold;
+            font-size: 14px;
+        }
+
+        .item-qty {
+            color: #806d60;
+            font-size: 12px;
+            margin-top: 4px;
+        }
+
+        .item-price {
+            font-weight: bold;
+            font-size: 14px;
+        }
+
+        .total-row {
+            display: flex;
+            justify-content: space-between;
+            padding-top: 15px;
+            margin-top: 5px;
+            border-top: 2px solid #3b2314;
+            font-size: 18px;
+            font-weight: bold;
+        }
+
+        /* ================= STATUS PROGRESS ================= */
+
+        .progress {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 15px;
+            position: relative;
+        }
+
+        .progress-step {
+            flex: 1;
+            text-align: center;
+            font-size: 10px;
+            color: #a18e80;
+        }
+
+        .progress-dot {
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: #ddd1c7;
+            margin: 0 auto 7px;
+        }
+
+        .progress-step.done .progress-dot {
+            background: #3b2314;
+        }
+
+        .progress-step.done {
+            color: #3b2314;
+            font-weight: bold;
+        }
+
+        /* ================= ACTIONS ================= */
+
+        .status-form select {
+            width: 100%;
+            padding: 11px;
+            border: 1px solid #d9c9bc;
+            border-radius: 8px;
+            margin-bottom: 10px;
+        }
+
+        .update-btn {
+            width: 100%;
+            padding: 11px;
+            background: #3b2314;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .update-btn:hover {
+            background: #6f4e37;
+        }
+
+        .cancel-btn {
+            width: 100%;
+            padding: 11px;
+            background: white;
+            color: #a33a3a;
+            border: 1px solid #d9a4a4;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            margin-top: 9px;
+        }
+
+        .cancel-btn:hover {
+            background: #fff0f0;
+        }
+
+        .final-message {
+            text-align: center;
+            color: #806d60;
+            font-size: 13px;
+            line-height: 1.5;
+        }
+
+        .success-message {
+            background: #e8f5e9;
+            color: #2e6535;
+            padding: 12px 16px;
+            border-radius: 8px;
+            margin-bottom: 18px;
+            font-size: 13px;
+        }
+
+        /* ================= RESPONSIVE ================= */
+
+        @media (max-width: 800px) {
+
+            .header {
+                padding: 0 20px;
+            }
+
+            .header-title,
+            .nav {
+                display: none;
+            }
+
+            .stats {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .order-row {
+                grid-template-columns: 1fr 1fr;
+            }
+
+            .order-date {
+                display: none;
+            }
+        }
     </style>
-
 </head>
-
 
 <body>
 
+<!-- ================= HEADER ================= -->
 
-<!-- ============================= -->
-<!-- HEADER                        -->
-<!-- ============================= -->
+<div class="header">
 
-<header>
+    <div class="brand">Bean Cafe!</div>
 
-    <h2>Bean Cafe - Order Management</h2>
+    <div class="staff-badge">
+        Staff POS
+    </div>
 
-    <a href="${pageContext.request.contextPath}/LogoutServlet">
-        Logout
-    </a>
+    <div class="nav">
 
-</header>
+        <a href="<%= request.getContextPath() %>/order?action=add">
+            Take Order
+        </a>
 
+        <a href="<%= request.getContextPath() %>/order"
+           class="active">
+            Manage Orders
+        </a>
+
+    </div>
+
+    <div class="user-area">
+
+        <div class="user-info">
+            <strong><%= name %></strong>
+            <span>Staff</span>
+        </div>
+
+        <a class="logout"
+           href="<%= request.getContextPath() %>/LogoutServlet">
+            Logout
+        </a>
+
+    </div>
+
+</div>
+
+
+<!-- ================= MAIN ================= -->
 
 <div class="container">
 
-    <h1>Order Management</h1>
+    <div class="page-top">
 
-    <p>
-        Welcome,
-        <strong><%= session.getAttribute("name") %></strong>
-        (<%= role %>)
-    </p>
+        <div class="page-title">
+            <h1>Orders</h1>
+            <p>Manage and track cafe orders.</p>
+        </div>
+
+        <% if ("Staff".equalsIgnoreCase(role)) { %>
+            <a class="new-order-btn"
+               href="<%= request.getContextPath() %>/order?action=add">
+                + New Order
+            </a>
+        <% } %>
+
+    </div>
 
 
-    <!-- ============================= -->
-    <!-- SUCCESS / ERROR MESSAGES      -->
-    <!-- ============================= -->
+    <%
+        int totalOrders = 0;
+        int pendingCount = 0;
+        int preparingCount = 0;
+        int readyCount = 0;
 
-    <% if ("created".equals(success)) { %>
+        if (orderList != null) {
 
-        <div class="message-success">
+            totalOrders = orderList.size();
+
+            for (Order o : orderList) {
+
+                if ("Pending".equalsIgnoreCase(o.getStatus())) {
+                    pendingCount++;
+                }
+
+                if ("Preparing".equalsIgnoreCase(o.getStatus())) {
+                    preparingCount++;
+                }
+
+                if ("Ready".equalsIgnoreCase(o.getStatus())) {
+                    readyCount++;
+                }
+            }
+        }
+    %>
+
+
+    <!-- ================= STATS ================= -->
+
+    <div class="stats">
+
+        <div class="stat-card">
+            <div class="stat-label">TOTAL ORDERS</div>
+            <div class="stat-value"><%= totalOrders %></div>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-label">PENDING</div>
+            <div class="stat-value"><%= pendingCount %></div>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-label">PREPARING</div>
+            <div class="stat-value"><%= preparingCount %></div>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-label">READY</div>
+            <div class="stat-value"><%= readyCount %></div>
+        </div>
+
+    </div>
+
+
+    <% if ("created".equals(request.getParameter("success"))) { %>
+
+        <div class="success-message">
             Order created successfully.
         </div>
 
     <% } %>
 
 
-    <% if ("notfound".equals(error)) { %>
+    <!-- ================= FILTER / SEARCH ================= -->
 
-        <div class="message-error">
-            Order could not be found.
+    <div class="toolbar">
+
+        <div class="tabs">
+
+            <button class="tab active"
+                    type="button"
+                    onclick="filterOrders('All', this)">
+                All
+            </button>
+
+            <button class="tab"
+                    type="button"
+                    onclick="filterOrders('Pending', this)">
+                Pending
+            </button>
+
+            <button class="tab"
+                    type="button"
+                    onclick="filterOrders('Preparing', this)">
+                Preparing
+            </button>
+
+            <button class="tab"
+                    type="button"
+                    onclick="filterOrders('Ready', this)">
+                Ready
+            </button>
+
+            <button class="tab"
+                    type="button"
+                    onclick="filterOrders('Completed', this)">
+                Completed
+            </button>
+
+            <button class="tab"
+                    type="button"
+                    onclick="filterOrders('Cancelled', this)">
+                Cancelled
+            </button>
+
         </div>
 
-    <% } %>
 
-
-    <!-- ============================= -->
-    <!-- TOP BUTTONS + SEARCH          -->
-    <!-- ============================= -->
-
-    <div class="top-section">
-
-
-        <!-- Only Staff can create order -->
-
-        <% if ("Staff".equalsIgnoreCase(role)) { %>
-
-            <a href="${pageContext.request.contextPath}/order?action=add"
-               class="btn btn-add">
-
-                + Create New Order
-
-            </a>
-
-        <% } %>
-
-
-        <!-- SEARCH -->
-
-        <form action="${pageContext.request.contextPath}/order"
+        <form class="search-row"
               method="get"
-              class="search-form">
+              action="<%= request.getContextPath() %>/order">
 
             <input type="hidden"
                    name="action"
@@ -287,22 +791,18 @@
 
             <input type="number"
                    name="orderId"
-                   placeholder="Enter Order ID"
                    min="1"
+                   placeholder="Search by Order ID..."
                    required>
 
             <button type="submit"
-                    class="btn btn-search">
-
+                    class="search-btn">
                 Search
-
             </button>
 
-            <a href="${pageContext.request.contextPath}/order"
-               class="btn btn-search">
-
+            <a href="<%= request.getContextPath() %>/order"
+               class="show-all-btn">
                 Show All
-
             </a>
 
         </form>
@@ -310,241 +810,275 @@
     </div>
 
 
-    <!-- ============================= -->
-    <!-- SEARCH RESULT                 -->
-    <!-- ============================= -->
+    <!-- ================= ORDERS ================= -->
 
-    <%
-        if (Boolean.TRUE.equals(searchPerformed)) {
-    %>
+    <div class="orders-card">
 
-        <h2 class="search-title">
-            Search Result
-        </h2>
+        <div class="orders-heading">
+            Order List
+        </div>
 
 
-        <% if (searchedOrder != null) { %>
+        <% if (searchPerformed) { %>
 
-            <table>
+            <% if (searchedOrder != null) { %>
 
-                <thead>
+                <div class="order-row"
+                     data-status="<%= searchedOrder.getStatus() %>"
+                     onclick="openOrder(<%= searchedOrder.getOrderId() %>)">
 
-                    <tr>
+                    <div class="order-id">
+                        #<%= searchedOrder.getOrderId() %>
+                    </div>
 
-                        <th>Order ID</th>
-                        <th>Staff ID</th>
-                        <th>Order Date</th>
-                        <th>Total Price (RM)</th>
-                        <th>Status</th>
-                        <th>Action</th>
+                    <div class="small-text">
+                        Staff #<%= searchedOrder.getStaffId() %>
+                    </div>
 
-                    </tr>
+                    <div class="small-text order-date">
+                        <%= searchedOrder.getOrderDate() %>
+                    </div>
 
-                </thead>
+                    <div class="price">
+                        RM <%= String.format("%.2f",
+                                searchedOrder.getTotalPrice()) %>
+                    </div>
 
-
-                <tbody>
-
-                    <tr>
-
-                        <td>
-                            <%= searchedOrder.getOrderId() %>
-                        </td>
-
-                        <td>
-                            <%= searchedOrder.getStaffId() %>
-                        </td>
-
-                        <td>
-                            <%= searchedOrder.getOrderDate() %>
-                        </td>
-
-                        <td>
-                            <%= String.format(
-                                    "%.2f",
-                                    searchedOrder.getTotalPrice()
-                                )
-                            %>
-                        </td>
-
-                        <td class="status">
+                    <div>
+                        <span class="status <%= searchedOrder.getStatus().toLowerCase() %>">
                             <%= searchedOrder.getStatus() %>
-                        </td>
+                        </span>
+                    </div>
 
-                        <td>
+                </div>
 
-                            <div class="action-buttons">
+            <% } else { %>
 
-                                <a href="${pageContext.request.contextPath}/order?action=view&id=<%= searchedOrder.getOrderId() %>"
-                                   class="btn btn-view">
+                <div class="empty">
+                    No order found with that Order ID.
+                </div>
 
-                                    View
-
-                                </a>
+            <% } %>
 
 
-                                <% if (!"Cancelled".equalsIgnoreCase(
-                                        searchedOrder.getStatus())) { %>
+        <% } else if (orderList != null && !orderList.isEmpty()) { %>
 
-                                    <a href="${pageContext.request.contextPath}/order?action=cancel&id=<%= searchedOrder.getOrderId() %>"
-                                       class="btn btn-cancel"
-                                       onclick="return confirm('Are you sure you want to cancel this order?');">
+            <%
+                // Newest orders first
+                for (int i = orderList.size() - 1; i >= 0; i--) {
 
-                                        Cancel
+                    Order order = orderList.get(i);
+            %>
 
-                                    </a>
+                <div class="order-row"
+                     data-status="<%= order.getStatus() %>"
+                     onclick="openOrder(<%= order.getOrderId() %>)">
 
-                                <% } %>
+                    <div class="order-id">
+                        #<%= order.getOrderId() %>
+                    </div>
 
-                            </div>
+                    <div class="small-text">
+                        Staff #<%= order.getStaffId() %>
+                    </div>
 
-                        </td>
+                    <div class="small-text order-date">
+                        <%= order.getOrderDate() %>
+                    </div>
 
-                    </tr>
+                    <div class="price">
+                        RM <%= String.format("%.2f",
+                                order.getTotalPrice()) %>
+                    </div>
 
-                </tbody>
+                    <div>
+                        <span class="status <%= order.getStatus().toLowerCase() %>">
+                            <%= order.getStatus() %>
+                        </span>
+                    </div>
 
-            </table>
+                </div>
 
+            <%
+                }
+            %>
+
+            <div id="filterEmpty"
+                 class="empty"
+                 style="display:none;">
+                No orders found for this status.
+            </div>
 
         <% } else { %>
 
-
-            <div class="message-error">
-                No order found with that Order ID.
+            <div class="empty">
+                No orders available.
             </div>
 
+        <% } %>
+
+    </div>
+
+</div>
+
+
+<!-- ===================================================== -->
+<!-- ORDER DETAILS DRAWER                                  -->
+<!-- ===================================================== -->
+
+<% if (selectedOrder != null) { %>
+
+<div class="overlay"
+     onclick="closeDrawer()">
+</div>
+
+
+<div class="drawer">
+
+    <div class="drawer-header">
+
+        <h2>
+            Order #<%= selectedOrder.getOrderId() %>
+        </h2>
+
+        <a href="<%= request.getContextPath() %>/order"
+           class="close-btn">
+            &times;
+        </a>
+
+    </div>
+
+
+    <div class="drawer-content">
+
+
+        <!-- ORDER INFO -->
+
+        <div class="detail-section">
+
+            <div class="detail-title">
+                Order Information
+            </div>
+
+            <div class="info-row">
+                <span class="info-label">Order ID</span>
+                <strong>#<%= selectedOrder.getOrderId() %></strong>
+            </div>
+
+            <div class="info-row">
+                <span class="info-label">Staff ID</span>
+                <span>#<%= selectedOrder.getStaffId() %></span>
+            </div>
+
+            <div class="info-row">
+                <span class="info-label">Date</span>
+                <span><%= selectedOrder.getOrderDate() %></span>
+            </div>
+
+            <div class="info-row">
+
+                <span class="info-label">Status</span>
+
+                <span class="status <%= selectedOrder.getStatus().toLowerCase() %>">
+                    <%= selectedOrder.getStatus() %>
+                </span>
+
+            </div>
+
+        </div>
+
+
+        <!-- STATUS PROGRESS -->
+
+        <%
+            String currentStatus =
+                    selectedOrder.getStatus();
+
+            int statusLevel = 0;
+
+            if ("Pending".equalsIgnoreCase(currentStatus)) {
+                statusLevel = 1;
+            } else if ("Preparing".equalsIgnoreCase(currentStatus)) {
+                statusLevel = 2;
+            } else if ("Ready".equalsIgnoreCase(currentStatus)) {
+                statusLevel = 3;
+            } else if ("Completed".equalsIgnoreCase(currentStatus)) {
+                statusLevel = 4;
+            }
+        %>
+
+        <% if (!"Cancelled".equalsIgnoreCase(currentStatus)) { %>
+
+        <div class="detail-section">
+
+            <div class="detail-title">
+                Order Progress
+            </div>
+
+            <div class="progress">
+
+                <div class="progress-step <%= statusLevel >= 1 ? "done" : "" %>">
+                    <div class="progress-dot"></div>
+                    Pending
+                </div>
+
+                <div class="progress-step <%= statusLevel >= 2 ? "done" : "" %>">
+                    <div class="progress-dot"></div>
+                    Preparing
+                </div>
+
+                <div class="progress-step <%= statusLevel >= 3 ? "done" : "" %>">
+                    <div class="progress-dot"></div>
+                    Ready
+                </div>
+
+                <div class="progress-step <%= statusLevel >= 4 ? "done" : "" %>">
+                    <div class="progress-dot"></div>
+                    Completed
+                </div>
+
+            </div>
+
+        </div>
 
         <% } %>
 
 
-    <%
-        } else {
-    %>
+        <!-- ORDER ITEMS -->
 
+        <div class="detail-section">
 
-    <!-- ============================= -->
-    <!-- ALL ORDERS                    -->
-    <!-- ============================= -->
-
-        <table>
-
-            <thead>
-
-                <tr>
-
-                    <th>Order ID</th>
-
-                    <th>Staff ID</th>
-
-                    <th>Order Date</th>
-
-                    <th>Total Price (RM)</th>
-
-                    <th>Status</th>
-
-                    <th>Action</th>
-
-                </tr>
-
-            </thead>
-
-
-            <tbody>
-
+            <div class="detail-title">
+                Order Items
+            </div>
 
             <%
-                if (orderList != null &&
-                    !orderList.isEmpty()) {
+                List<OrderItem> items =
+                        selectedOrder.getItems();
 
-                    for (Order order : orderList) {
+                if (items != null && !items.isEmpty()) {
+
+                    for (OrderItem item : items) {
             %>
 
+                <div class="item-row">
 
-                <tr>
-
-                    <!-- ORDER ID -->
-
-                    <td>
-                        <%= order.getOrderId() %>
-                    </td>
-
-
-                    <!-- STAFF ID -->
-
-                    <td>
-                        <%= order.getStaffId() %>
-                    </td>
-
-
-                    <!-- ORDER DATE -->
-
-                    <td>
-                        <%= order.getOrderDate() %>
-                    </td>
-
-
-                    <!-- TOTAL PRICE -->
-
-                    <td>
-
-                        <%= String.format(
-                                "%.2f",
-                                order.getTotalPrice()
-                            )
-                        %>
-
-                    </td>
-
-
-                    <!-- STATUS -->
-
-                    <td class="status">
-
-                        <%= order.getStatus() %>
-
-                    </td>
-
-
-                    <!-- ACTION -->
-
-                    <td>
-
-                        <div class="action-buttons">
-
-
-                            <!-- VIEW -->
-
-                            <a href="${pageContext.request.contextPath}/order?action=view&id=<%= order.getOrderId() %>"
-                               class="btn btn-view">
-
-                                View
-
-                            </a>
-
-
-                            <!-- CANCEL -->
-
-                            <% if (!"Cancelled".equalsIgnoreCase(
-                                    order.getStatus())) { %>
-
-                                <a href="${pageContext.request.contextPath}/order?action=cancel&id=<%= order.getOrderId() %>"
-                                   class="btn btn-cancel"
-                                   onclick="return confirm('Are you sure you want to cancel this order?');">
-
-                                    Cancel
-
-                                </a>
-
-                            <% } %>
-
-
+                    <div>
+                        <div class="item-name">
+                            <%= item.getMenuName() %>
                         </div>
 
-                    </td>
+                        <div class="item-qty">
+                            Quantity: <%= item.getQuantity() %>
+                        </div>
+                    </div>
 
-                </tr>
+                    <div class="item-price">
+                        RM <%= String.format("%.2f",
+                                item.getSubtotal()) %>
+                    </div>
 
+                </div>
 
             <%
                     }
@@ -552,62 +1086,217 @@
                 } else {
             %>
 
-
-                <tr>
-
-                    <td colspan="6"
-                        class="no-orders">
-
-                        No orders found.
-
-                    </td>
-
-                </tr>
-
+                <div class="small-text">
+                    No order items found.
+                </div>
 
             <%
                 }
             %>
 
 
-            </tbody>
+            <div class="total-row">
+                <span>Total</span>
 
-        </table>
+                <span>
+                    RM <%= String.format("%.2f",
+                            selectedOrder.getTotalPrice()) %>
+                </span>
+            </div>
+
+        </div>
 
 
-    <%
-        }
-    %>
+        <!-- UPDATE STATUS -->
+
+        <%
+            boolean finalStatus =
+                    "Completed".equalsIgnoreCase(currentStatus)
+                    || "Cancelled".equalsIgnoreCase(currentStatus);
+        %>
 
 
-    <!-- ============================= -->
-    <!-- BACK TO DASHBOARD             -->
-    <!-- ============================= -->
+        <% if (!finalStatus) { %>
 
-    <% if ("Admin".equalsIgnoreCase(role)) { %>
+        <div class="detail-section">
 
-        <a href="${pageContext.request.contextPath}/admin-dashboard.jsp"
-           class="btn btn-back">
+            <div class="detail-title">
+                Update Status
+            </div>
 
-            Back to Dashboard
+            <form class="status-form"
+                  method="post"
+                  action="<%= request.getContextPath() %>/order">
 
-        </a>
+                <input type="hidden"
+                       name="action"
+                       value="updateStatus">
 
-    <% } else { %>
+                <input type="hidden"
+                       name="orderId"
+                       value="<%= selectedOrder.getOrderId() %>">
 
-        <a href="${pageContext.request.contextPath}/staff-dashboard.jsp"
-           class="btn btn-back">
 
-            Back to Dashboard
+                <select name="status" required>
 
-        </a>
+                    <option value="">
+                        Select new status
+                    </option>
 
-    <% } %>
+                    <% if ("Pending".equalsIgnoreCase(currentStatus)) { %>
 
+                        <option value="Preparing">
+                            Preparing
+                        </option>
+
+                    <% } else if ("Preparing".equalsIgnoreCase(currentStatus)) { %>
+
+                        <option value="Ready">
+                            Ready
+                        </option>
+
+                    <% } else if ("Ready".equalsIgnoreCase(currentStatus)) { %>
+
+                        <option value="Completed">
+                            Completed
+                        </option>
+
+                    <% } %>
+
+                </select>
+
+
+                <button type="submit"
+                        class="update-btn">
+                    Update Order Status
+                </button>
+
+            </form>
+
+
+            <form method="post"
+                  action="<%= request.getContextPath() %>/order"
+                  onsubmit="return confirm('Cancel this order?');">
+
+                <input type="hidden"
+                       name="action"
+                       value="cancel">
+
+                <input type="hidden"
+                       name="id"
+                       value="<%= selectedOrder.getOrderId() %>">
+
+                <button type="submit"
+                        class="cancel-btn">
+                    Cancel Order
+                </button>
+
+            </form>
+
+        </div>
+
+        <% } else { %>
+
+        <div class="detail-section">
+
+            <div class="final-message">
+
+                <% if ("Completed".equalsIgnoreCase(currentStatus)) { %>
+                    This order has been completed.
+                <% } else { %>
+                    This order has been cancelled.
+                <% } %>
+
+            </div>
+
+        </div>
+
+        <% } %>
+
+    </div>
 
 </div>
 
+<% } %>
+
+
+<script>
+
+    // ==============================
+    // OPEN ORDER DETAILS
+    // ==============================
+
+    function openOrder(orderId) {
+
+        window.location.href =
+            "<%= request.getContextPath() %>/order?open="
+            + orderId;
+    }
+
+
+    // ==============================
+    // CLOSE DRAWER
+    // ==============================
+
+    function closeDrawer() {
+
+        window.location.href =
+            "<%= request.getContextPath() %>/order";
+    }
+
+
+    // ==============================
+    // FILTER ORDERS BY STATUS
+    // ==============================
+
+    function filterOrders(status, button) {
+
+        const rows =
+            document.querySelectorAll(".order-row");
+
+        const tabs =
+            document.querySelectorAll(".tab");
+
+        const empty =
+            document.getElementById("filterEmpty");
+
+        tabs.forEach(tab =>
+            tab.classList.remove("active")
+        );
+
+        button.classList.add("active");
+
+        let visible = 0;
+
+        rows.forEach(row => {
+
+            const rowStatus =
+                row.dataset.status;
+
+            if (status === "All"
+                    || rowStatus.toLowerCase()
+                    === status.toLowerCase()) {
+
+                row.style.display = "grid";
+                visible++;
+
+            } else {
+
+                row.style.display = "none";
+            }
+        });
+
+
+        if (empty) {
+
+            empty.style.display =
+                visible === 0
+                    ? "block"
+                    : "none";
+        }
+    }
+
+</script>
 
 </body>
-
 </html>

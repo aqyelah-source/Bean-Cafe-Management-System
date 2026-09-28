@@ -5,6 +5,7 @@ public class OrderItem {
     private int orderItemId;
     private int orderId;
     private int menuId;
+    private String menuName;
     private int quantity;
     private double subtotal;
 
@@ -51,6 +52,14 @@ public class OrderItem {
 
     public void setMenuId(int menuId) {
         this.menuId = menuId;
+    }
+
+    public String getMenuName() {
+        return menuName;
+    }
+
+    public void setMenuName(String menuName) {
+        this.menuName = menuName;
     }
 
     public int getQuantity() {

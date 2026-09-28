@@ -147,8 +147,7 @@ public class OrderServlet extends HttpServlet {
     // ==========================================
     // READ - DISPLAY ALL ORDERS
     // ==========================================
-    private void listOrders(HttpServletRequest request,
-                            HttpServletResponse response)
+    private void listOrders(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
 
         List<Order> orderList =
@@ -158,6 +157,32 @@ public class OrderServlet extends HttpServlet {
                 "orderList",
                 orderList
         );
+
+        // If an order is selected, load its full details
+        String openId = request.getParameter("open");
+
+        if (openId != null && !openId.trim().isEmpty()) {
+
+            try {
+
+                int orderId = Integer.parseInt(openId);
+
+                Order selectedOrder =
+                        orderDAO.getOrderById(orderId);
+
+                request.setAttribute(
+                        "selectedOrder",
+                        selectedOrder
+                );
+
+            } catch (NumberFormatException e) {
+
+                request.setAttribute(
+                        "selectedOrder",
+                        null
+                );
+            }
+        }
 
         request.getRequestDispatcher("/order-list.jsp")
                .forward(request, response);
@@ -511,55 +536,50 @@ public class OrderServlet extends HttpServlet {
     // ==========================================
     // UPDATE - UPDATE ORDER STATUS
     // ==========================================
-    private void updateOrderStatus(HttpServletRequest request,
-                                   HttpServletResponse response)
-            throws IOException {
+    private void updateOrderStatus(HttpServletRequest request, HttpServletResponse response)
+         throws IOException {
 
-        try {
+     try {
 
-            int orderId =
-                    Integer.parseInt(
-                            request.getParameter("orderId")
-                    );
+         int orderId =
+                 Integer.parseInt(
+                         request.getParameter("orderId")
+                 );
 
+         String status =
+                 request.getParameter("status");
 
-            String status =
-                    request.getParameter("status");
+         if (status == null ||
+             status.trim().isEmpty()) {
 
+             response.sendRedirect(
+                     request.getContextPath()
+                     + "/order?open="
+                     + orderId
+             );
 
-            if (status == null ||
-                status.trim().isEmpty()) {
+             return;
+         }
 
-                response.sendRedirect(
-                        request.getContextPath()
-                        + "/order?action=view&id="
-                        + orderId
-                );
+         orderDAO.updateOrderStatus(
+                 orderId,
+                 status
+         );
 
-                return;
-            }
+         // Return to Manage Orders and reopen same drawer
+         response.sendRedirect(
+                 request.getContextPath()
+                 + "/order?open="
+                 + orderId
+         );
 
+     } catch (NumberFormatException e) {
 
-            orderDAO.updateOrderStatus(
-                    orderId,
-                    status
-            );
-
-
-            response.sendRedirect(
-                    request.getContextPath()
-                    + "/order?action=view&id="
-                    + orderId
-            );
-
-
-        } catch (NumberFormatException e) {
-
-            response.sendRedirect(
-                    request.getContextPath() + "/order"
-            );
-        }
-    }
+         response.sendRedirect(
+                 request.getContextPath() + "/order"
+         );
+     }
+ }
 
 
     // ==========================================

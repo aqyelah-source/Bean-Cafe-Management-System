@@ -3,7 +3,7 @@
 <%@ page import="com.beancafe.model.Menu" %>
 
 <%
-    // Make sure user is logged in as Staff
+    // Only Staff can access this page
     if (session.getAttribute("role") == null ||
         !"Staff".equalsIgnoreCase((String) session.getAttribute("role"))) {
 
@@ -19,449 +19,1021 @@
 
 <!DOCTYPE html>
 <html>
-
 <head>
-
     <meta charset="UTF-8">
-
-    <title>Create Order - Bean Cafe</title>
+    <title>Staff POS - Bean Cafe</title>
 
     <style>
-
-        body {
-            font-family: Arial, sans-serif;
-            background-color: #f5f0eb;
-            margin: 0;
+        * {
+            box-sizing: border-box;
         }
 
-        header {
-            background-color: #4b2e1e;
+        body {
+            margin: 0;
+            font-family: "Segoe UI", Arial, sans-serif;
+            background: #f3eadf;
+            color: #2c1a0e;
+        }
+
+        /* ================= HEADER ================= */
+
+        .header {
+            height: 70px;
+            background: #f8f1e8;
+            border-bottom: 1px solid #e2d3c1;
+            display: flex;
+            align-items: center;
+            padding: 0 28px;
+            gap: 25px;
+        }
+
+        .brand {
+            font-size: 22px;
+            font-weight: 800;
+            color: #3b2314;
+        }
+
+        .badge {
+            background: #3b2314;
             color: white;
-            padding: 16px 24px;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .nav {
+            display: flex;
+            gap: 8px;
+        }
+
+        .nav a {
+            text-decoration: none;
+            color: #7a6553;
+            padding: 9px 17px;
+            border-radius: 20px;
+            font-weight: 600;
+        }
+
+        .nav a.active {
+            background: #3b2314;
+            color: white;
+        }
+
+        .nav a:hover {
+            background: #e8dac9;
+            color: #3b2314;
+        }
+
+        .staff-info {
+            margin-left: auto;
+            text-align: right;
+            font-size: 13px;
+            color: #7a6553;
+        }
+
+        .staff-info strong {
+            display: block;
+            color: #2c1a0e;
+            font-size: 14px;
+        }
+
+        .logout {
+            margin-left: 12px;
+            text-decoration: none;
+            background: #3b2314;
+            color: white;
+            padding: 9px 16px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        /* ================= MAIN ================= */
+
+        .layout {
+            display: grid;
+            grid-template-columns: 1fr 390px;
+            min-height: calc(100vh - 70px);
+        }
+
+        /* ================= LEFT ================= */
+
+        .menu-section {
+            padding: 24px;
+        }
+
+        .section-title {
+            margin: 0 0 5px;
+            font-size: 23px;
+        }
+
+        .subtitle {
+            color: #7a6553;
+            margin: 0 0 20px;
+            font-size: 14px;
+        }
+
+        .search-box {
+            width: 100%;
+            padding: 12px 17px;
+            border-radius: 25px;
+            border: 1px solid #e2d3c1;
+            background: #fffaf3;
+            font-size: 14px;
+            outline: none;
+            margin-bottom: 16px;
+        }
+
+        .search-box:focus {
+            border-color: #c98a12;
+        }
+
+        /* ================= CATEGORY ================= */
+
+        .categories {
+            display: flex;
+            gap: 9px;
+            margin-bottom: 20px;
+        }
+
+        .category-btn {
+            border: 1px solid #e2d3c1;
+            background: #f8f1e8;
+            color: #7a6553;
+            padding: 9px 18px;
+            border-radius: 12px;
+            cursor: pointer;
+            font-weight: 600;
+        }
+
+        .category-btn.active {
+            background: #3b2314;
+            color: white;
+            border-color: #3b2314;
+        }
+
+        /* ================= MENU GRID ================= */
+
+        .menu-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+            gap: 14px;
+        }
+
+        .menu-card {
+            background: #fffaf3;
+            border: 1px solid #e2d3c1;
+            border-radius: 15px;
+            padding: 17px;
+            min-height: 135px;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            transition: 0.15s;
+        }
+
+        .menu-card.available {
+            cursor: pointer;
+        }
+
+        .menu-card.available:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 14px rgba(59, 35, 20, 0.10);
+        }
+
+        .menu-card.unavailable {
+            opacity: 0.55;
+            cursor: not-allowed;
+        }
+
+        .menu-name {
+            font-weight: 700;
+            font-size: 16px;
+            margin-bottom: 5px;
+        }
+
+        .menu-category {
+            font-size: 12px;
+            color: #7a6553;
+            margin-bottom: 14px;
+        }
+
+        .menu-bottom {
+            margin-top: auto;
             display: flex;
             justify-content: space-between;
             align-items: center;
         }
 
-        header h2 {
-            margin: 0;
+        .menu-price {
+            font-weight: 700;
+            color: #3b2314;
         }
 
-        header a {
-            color: white;
-            text-decoration: none;
-            background-color: #6f4e37;
-            padding: 8px 14px;
-            border-radius: 4px;
+        .sold-out {
+            color: #b3402f;
+            font-weight: 700;
+            font-size: 13px;
         }
 
-        .container {
-            width: 85%;
-            margin: 30px auto;
-            background-color: white;
-            padding: 25px;
-            border-radius: 8px;
-            box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-        }
-
-        h1 {
-            color: #4b2e1e;
-            margin-top: 0;
-        }
-
-        .message {
-            padding: 12px;
-            margin-bottom: 20px;
-            border-radius: 5px;
-            background-color: #f8d7da;
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 20px;
-        }
-
-        th {
-            background-color: #4b2e1e;
-            color: white;
-            padding: 12px;
-            text-align: left;
-        }
-
-        td {
-            padding: 12px;
-            border-bottom: 1px solid #ddd;
-        }
-
-        tr:hover {
-            background-color: #f8f5f2;
-        }
-
-        input[type="number"] {
-            width: 70px;
-            padding: 7px;
-        }
-
-        .available {
-            font-weight: bold;
-        }
-
-        .unavailable {
-            font-weight: bold;
-        }
-
-        .total-box {
-            margin-top: 25px;
-            text-align: right;
-            font-size: 20px;
-            font-weight: bold;
-        }
-
-        .buttons {
-            margin-top: 25px;
-            display: flex;
-            gap: 10px;
-        }
-
-        .btn {
+        .add-icon {
+            width: 31px;
+            height: 31px;
+            border-radius: 50%;
             border: none;
-            padding: 11px 18px;
-            border-radius: 5px;
+            background: #3b2314;
+            color: white;
+            font-size: 19px;
             cursor: pointer;
-            text-decoration: none;
+        }
+
+        .add-icon:hover {
+            background: #6f4e37;
+        }
+
+        /* ================= RIGHT / CURRENT ORDER ================= */
+
+        .order-panel {
+            background: #f8f1e8;
+            border-left: 1px solid #e2d3c1;
+            padding: 22px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .order-panel h2 {
+            margin: 0;
+            font-size: 20px;
+        }
+
+        .order-staff {
+            color: #7a6553;
+            font-size: 13px;
+            margin-top: 5px;
+            margin-bottom: 18px;
+        }
+
+        .order-items {
+            flex: 1;
+            max-height: calc(100vh - 310px);
+            overflow-y: auto;
+        }
+
+        .empty-cart {
+            color: #7a6553;
+            text-align: center;
+            padding: 60px 15px;
             font-size: 14px;
         }
 
-        .btn-submit {
-            background-color: #4b2e1e;
+        .cart-item {
+            background: #fffaf3;
+            border: 1px solid #e2d3c1;
+            border-radius: 12px;
+            padding: 13px;
+            margin-bottom: 9px;
+        }
+
+        .cart-top {
+            display: flex;
+            justify-content: space-between;
+            gap: 10px;
+            font-weight: 700;
+        }
+
+        .cart-price {
+            color: #7a6553;
+            font-size: 12px;
+            margin-top: 3px;
+        }
+
+        .cart-bottom {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 11px;
+        }
+
+        .quantity-control {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .quantity-control button {
+            width: 29px;
+            height: 29px;
+            border-radius: 50%;
+            border: none;
+            background: #3b2314;
+            color: white;
+            font-size: 17px;
+            cursor: pointer;
+        }
+
+        .quantity-value {
+            min-width: 20px;
+            text-align: center;
+            font-weight: 700;
+        }
+
+        .remove-btn {
+            border: none;
+            background: none;
+            color: #b3402f;
+            font-weight: 600;
+            cursor: pointer;
+            font-size: 12px;
+        }
+
+        /* ================= TOTAL ================= */
+
+        .total-area {
+            border-top: 1px solid #e2d3c1;
+            padding-top: 16px;
+            margin-top: 15px;
+        }
+
+        .total-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 21px;
+            font-weight: 800;
+        }
+
+        .action-buttons {
+            display: grid;
+            grid-template-columns: 1fr 2fr;
+            gap: 9px;
+            margin-top: 17px;
+        }
+
+        .clear-btn,
+        .create-btn {
+            border: none;
+            padding: 13px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: 700;
+            font-size: 14px;
+        }
+
+        .clear-btn {
+            background: #fffaf3;
+            border: 1px solid #e2d3c1;
+            color: #7a6553;
+        }
+
+        .create-btn {
+            background: #3b2314;
             color: white;
         }
 
-        .btn-cancel {
-            background-color: #777;
-            color: white;
+        .create-btn:hover {
+            background: #6f4e37;
         }
 
-        .btn:hover {
-            opacity: 0.9;
+        .create-btn:disabled,
+        .clear-btn:disabled {
+            opacity: 0.45;
+            cursor: not-allowed;
         }
 
+        /* ================= MESSAGE ================= */
+
+        .message {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 11px 14px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            font-size: 13px;
+        }
+
+        .no-menu {
+            grid-column: 1 / -1;
+            text-align: center;
+            padding: 40px;
+            color: #7a6553;
+        }
+
+        /* Hidden inputs used by existing servlet */
+        .hidden-quantity {
+            display: none;
+        }
+
+        @media (max-width: 900px) {
+            .layout {
+                grid-template-columns: 1fr;
+            }
+
+            .order-panel {
+                border-left: none;
+                border-top: 1px solid #e2d3c1;
+            }
+
+            .staff-info {
+                display: none;
+            }
+        }
     </style>
-
 </head>
-
 
 <body>
 
+<!-- ================= HEADER ================= -->
 
-<header>
+<header class="header">
 
-    <h2>Bean Cafe - Create Order</h2>
+    <div class="brand">Bean Cafe!</div>
 
-    <a href="${pageContext.request.contextPath}/LogoutServlet">
+    <span class="badge">Staff POS</span>
+
+    <nav class="nav">
+        <a href="${pageContext.request.contextPath}/order?action=add"
+           class="active">
+            Take Order
+        </a>
+
+        <a href="${pageContext.request.contextPath}/order">
+            Manage Orders
+        </a>
+    </nav>
+
+    <div class="staff-info">
+        <strong><%= session.getAttribute("name") %></strong>
+        Staff
+    </div>
+
+    <a class="logout"
+       href="${pageContext.request.contextPath}/LogoutServlet">
         Logout
     </a>
 
 </header>
 
 
-<div class="container">
+<form action="${pageContext.request.contextPath}/order"
+      method="post"
+      id="orderForm"
+      onsubmit="return validateOrder();">
 
-    <h1>Create New Order</h1>
-
-    <p>
-        Staff:
-        <strong><%= session.getAttribute("name") %></strong>
-    </p>
-
-
-    <!-- ERROR MESSAGES -->
-
-    <% if ("staff".equals(error)) { %>
-
-        <div class="message">
-            Staff account could not be found.
-        </div>
-
-    <% } else if ("items".equals(error)) { %>
-
-        <div class="message">
-            Invalid menu item information.
-        </div>
-
-    <% } else if ("noitem".equals(error)) { %>
-
-        <div class="message">
-            Please select at least one menu item.
-        </div>
-
-    <% } else if ("number".equals(error)) { %>
-
-        <div class="message">
-            Please enter a valid quantity.
-        </div>
-
-    <% } else if ("insert".equals(error)) { %>
-
-        <div class="message">
-            Order could not be created.
-        </div>
-
-    <% } %>
+    <input type="hidden"
+           name="action"
+           value="insert">
 
 
-    <form action="${pageContext.request.contextPath}/order"
-          method="post"
-          onsubmit="return validateOrder();">
+    <div class="layout">
+
+        <!-- ================= LEFT SIDE ================= -->
+
+        <main class="menu-section">
+
+            <h1 class="section-title">Take Order</h1>
+
+            <p class="subtitle">
+                Select menu items for the customer's order.
+            </p>
 
 
-        <input type="hidden"
-               name="action"
-               value="insert">
+            <% if ("staff".equals(error)) { %>
+
+                <div class="message">
+                    Staff account could not be found.
+                </div>
+
+            <% } else if ("items".equals(error)) { %>
+
+                <div class="message">
+                    Invalid menu item information.
+                </div>
+
+            <% } else if ("noitem".equals(error)) { %>
+
+                <div class="message">
+                    Please select at least one menu item.
+                </div>
+
+            <% } else if ("number".equals(error)) { %>
+
+                <div class="message">
+                    Please enter a valid quantity.
+                </div>
+
+            <% } else if ("insert".equals(error)) { %>
+
+                <div class="message">
+                    Order could not be created.
+                </div>
+
+            <% } %>
 
 
-        <table>
+            <!-- SEARCH -->
 
-            <thead>
-
-                <tr>
-
-                    <th>Menu</th>
-
-                    <th>Category</th>
-
-                    <th>Price (RM)</th>
-
-                    <th>Availability</th>
-
-                    <th>Quantity</th>
-
-                    <th>Subtotal (RM)</th>
-
-                </tr>
-
-            </thead>
+            <input type="text"
+                   id="menuSearch"
+                   class="search-box"
+                   placeholder="Search menu..."
+                   oninput="filterMenu()">
 
 
-            <tbody>
+            <!-- CATEGORY -->
 
-            <%
-                if (menuList != null && !menuList.isEmpty()) {
+            <div class="categories">
 
-                    for (Menu menu : menuList) {
+                <button type="button"
+                        class="category-btn active"
+                        data-category="Coffee"
+                        onclick="selectCategory('Coffee', this)">
+                    Coffee
+                </button>
 
-                        boolean available =
-                                "Available".equalsIgnoreCase(
-                                        menu.getAvailability()
-                                );
-            %>
+                <button type="button"
+                        class="category-btn"
+                        data-category="Non-Coffee"
+                        onclick="selectCategory('Non-Coffee', this)">
+                    Non-Coffee
+                </button>
 
-                <tr>
+                <button type="button"
+                        class="category-btn"
+                        data-category="Dessert"
+                        onclick="selectCategory('Dessert', this)">
+                    Dessert
+                </button>
 
-                    <!-- MENU NAME -->
-                    <td>
-                        <%= menu.getMenuName() %>
-                    </td>
-
-
-                    <!-- CATEGORY -->
-                    <td>
-                        <%= menu.getCategory() %>
-                    </td>
-
-
-                    <!-- PRICE -->
-                    <td>
-                        <%= String.format("%.2f", menu.getPrice()) %>
-                    </td>
+            </div>
 
 
-                    <!-- AVAILABILITY -->
-                    <td>
+            <!-- MENU CARDS -->
 
+            <div class="menu-grid" id="menuGrid">
+
+                <%
+                    if (menuList != null && !menuList.isEmpty()) {
+
+                        for (Menu menu : menuList) {
+
+                            boolean available =
+                                    "Available".equalsIgnoreCase(
+                                            menu.getAvailability());
+
+                            String category =
+                                    menu.getCategory() == null
+                                            ? ""
+                                            : menu.getCategory();
+                %>
+
+                    <div class="menu-card <%= available ? "available" : "unavailable" %>"
+                        data-id="<%= menu.getMenuId() %>"
+                        data-name="<%= menu.getMenuName() %>"
+                        data-category="<%= category %>"
+                        data-price="<%= menu.getPrice() %>"
                         <% if (available) { %>
+                        onclick="addItem(<%= menu.getMenuId() %>)"
+                        <% } %>>
 
-                            <span class="available">
-                                Available
-                            </span>
+                        <div class="menu-name">
+                            <%= menu.getMenuName() %>
+                        </div>
 
-                        <% } else { %>
+                        <div class="menu-category">
+                            <%= category %>
+                        </div>
 
-                            <span class="unavailable">
-                                Unavailable
-                            </span>
+                        <div class="menu-bottom">
 
-                        <% } %>
+                            <% if (available) { %>
 
-                    </td>
+                                <span class="menu-price">
+                                    RM <%= String.format("%.2f", menu.getPrice()) %>
+                                </span>
 
 
-                    <!-- QUANTITY -->
-                    <td>
+                            <% } else { %>
+
+                                <span class="sold-out">
+                                    Unavailable
+                                </span>
+
+                            <% } %>
+
+                        </div>
+
+
+                        <!-- Existing servlet still receives menuId + quantity -->
 
                         <input type="hidden"
                                name="menuId"
                                value="<%= menu.getMenuId() %>">
 
-
                         <input type="number"
                                name="quantity"
+                               id="qty-<%= menu.getMenuId() %>"
+                               class="hidden-quantity"
                                value="0"
-                               min="0"
-                               class="quantity"
-                               data-price="<%= menu.getPrice() %>"
-                               onchange="calculateTotal()"
-                               oninput="calculateTotal()"
-                               <%= available ? "" : "disabled" %>>
+                               min="0">
 
-                    </td>
+                    </div>
 
+                <%
+                        }
 
-                    <!-- SUBTOTAL -->
-                    <td>
+                    } else {
+                %>
 
-                        <span class="subtotal">
-                            0.00
-                        </span>
-
-                    </td>
-
-                </tr>
-
-            <%
-                    }
-
-                } else {
-            %>
-
-                <tr>
-
-                    <td colspan="6"
-                        style="text-align:center;">
-
+                    <div class="no-menu">
                         No menu items found.
+                    </div>
 
-                    </td>
+                <%
+                    }
+                %>
 
-                </tr>
+            </div>
 
-            <%
-                }
-            %>
-
-            </tbody>
-
-        </table>
+        </main>
 
 
-        <!-- TOTAL -->
+        <!-- ================= CURRENT ORDER ================= -->
 
-        <div class="total-box">
+        <aside class="order-panel">
 
-            Total: RM
+            <h2>Current Order</h2>
 
-            <span id="totalPrice">
-                0.00
-            </span>
+            <div class="order-staff">
+                Staff:
+                <strong><%= session.getAttribute("name") %></strong>
+            </div>
 
-        </div>
+            <div class="order-items"
+                 id="cartItems">
 
+                <div class="empty-cart">
+                    No items selected.<br>
+                    Click a menu item to add it.
+                </div>
 
-        <!-- BUTTONS -->
-
-        <div class="buttons">
-
-            <button type="submit"
-                    class="btn btn-submit">
-
-                Create Order
-
-            </button>
+            </div>
 
 
-            <a href="${pageContext.request.contextPath}/order"
-               class="btn btn-cancel">
+            <div class="total-area">
 
-                Cancel
+                <div class="total-row">
+                    <span>Total</span>
 
-            </a>
+                    <span>
+                        RM <span id="totalPrice">0.00</span>
+                    </span>
+                </div>
 
-        </div>
 
+                <div class="action-buttons">
 
-    </form>
+                    <button type="button"
+                            id="clearButton"
+                            class="clear-btn"
+                            onclick="clearOrder()"
+                            disabled>
+                        Clear
+                    </button>
 
-</div>
+                    <button type="submit"
+                            id="createButton"
+                            class="create-btn"
+                            disabled>
+                        Create Order
+                    </button>
+
+                </div>
+
+            </div>
+
+        </aside>
+
+    </div>
+
+</form>
 
 
 <script>
 
-    function calculateTotal() {
+    let selectedCategory = "Coffee";
 
-        const quantityInputs =
-                document.querySelectorAll(".quantity");
 
-        const subtotalDisplays =
-                document.querySelectorAll(".subtotal");
+    /* =========================================
+       ADD ITEM
+       ========================================= */
+
+    function addItem(menuId) {
+
+        const input =
+                document.getElementById("qty-" + menuId);
+
+        input.value =
+                parseInt(input.value || 0) + 1;
+
+        updateCart();
+    }
+
+
+    /* =========================================
+       CHANGE QUANTITY
+       ========================================= */
+
+    function changeQuantity(menuId, amount) {
+
+        const input =
+                document.getElementById("qty-" + menuId);
+
+        let quantity =
+                parseInt(input.value || 0) + amount;
+
+        if (quantity < 0) {
+            quantity = 0;
+        }
+
+        input.value = quantity;
+
+        updateCart();
+    }
+
+
+    /* =========================================
+       REMOVE ITEM
+       ========================================= */
+
+    function removeItem(menuId) {
+
+        const input =
+                document.getElementById("qty-" + menuId);
+
+        input.value = 0;
+
+        updateCart();
+    }
+
+
+    /* =========================================
+       UPDATE CURRENT ORDER
+       ========================================= */
+
+    function updateCart() {
+
+        const cards =
+                document.querySelectorAll(".menu-card");
+
+        const cart =
+                document.getElementById("cartItems");
+
+        let html = "";
 
         let total = 0;
 
+        let hasItem = false;
 
-        quantityInputs.forEach(function(input, index) {
+
+        cards.forEach(function(card) {
+
+            const menuId =
+                    card.dataset.id;
+
+            const name =
+                    card.dataset.name;
 
             const price =
-                    parseFloat(input.dataset.price);
+                    parseFloat(card.dataset.price);
 
-            let quantity =
-                    parseInt(input.value);
+            const quantityInput =
+                    document.getElementById(
+                            "qty-" + menuId
+                    );
+
+            const quantity =
+                    parseInt(quantityInput.value || 0);
 
 
-            if (isNaN(quantity) || quantity < 0) {
-                quantity = 0;
+            if (quantity > 0) {
+
+                hasItem = true;
+
+                const subtotal =
+                        price * quantity;
+
+                total += subtotal;
+
+
+                html +=
+                    '<div class="cart-item">' +
+
+                        '<div class="cart-top">' +
+
+                            '<span>' +
+                                escapeHtml(name) +
+                            '</span>' +
+
+                            '<span>RM ' +
+                                subtotal.toFixed(2) +
+                            '</span>' +
+
+                        '</div>' +
+
+                        '<div class="cart-price">' +
+                            'RM ' +
+                            price.toFixed(2) +
+                            ' each' +
+                        '</div>' +
+
+                        '<div class="cart-bottom">' +
+
+                            '<div class="quantity-control">' +
+
+                                '<button type="button" ' +
+                                    'onclick="changeQuantity(' +
+                                    menuId +
+                                    ', -1)">−</button>' +
+
+                                '<span class="quantity-value">' +
+                                    quantity +
+                                '</span>' +
+
+                                '<button type="button" ' +
+                                    'onclick="changeQuantity(' +
+                                    menuId +
+                                    ', 1)">+</button>' +
+
+                            '</div>' +
+
+                            '<button type="button" ' +
+                                'class="remove-btn" ' +
+                                'onclick="removeItem(' +
+                                menuId +
+                                ')">' +
+                                'Remove' +
+                            '</button>' +
+
+                        '</div>' +
+
+                    '</div>';
             }
 
-
-            const subtotal =
-                    price * quantity;
-
-
-            subtotalDisplays[index].textContent =
-                    subtotal.toFixed(2);
-
-
-            total += subtotal;
-
         });
+
+
+        if (!hasItem) {
+
+            html =
+                '<div class="empty-cart">' +
+                    'No items selected.<br>' +
+                    'Click + on a menu item to add it.' +
+                '</div>';
+        }
+
+
+        cart.innerHTML = html;
 
 
         document.getElementById("totalPrice")
                 .textContent =
                 total.toFixed(2);
+
+
+        document.getElementById("createButton")
+                .disabled =
+                !hasItem;
+
+
+        document.getElementById("clearButton")
+                .disabled =
+                !hasItem;
     }
 
+
+    /* =========================================
+       CLEAR ORDER
+       ========================================= */
+
+    function clearOrder() {
+
+        document.querySelectorAll(
+                ".hidden-quantity"
+        ).forEach(function(input) {
+
+            input.value = 0;
+
+        });
+
+        updateCart();
+    }
+
+
+    /* =========================================
+       CATEGORY FILTER
+       ========================================= */
+
+    function selectCategory(category, button) {
+
+        selectedCategory = category;
+
+        document.getElementById("menuSearch")
+                .value = "";
+
+
+        document.querySelectorAll(
+                ".category-btn"
+        ).forEach(function(btn) {
+
+            btn.classList.remove("active");
+
+        });
+
+
+        button.classList.add("active");
+
+        filterMenu();
+    }
+
+
+    /* =========================================
+       SEARCH + FILTER
+       ========================================= */
+
+    function filterMenu() {
+
+        const search =
+                document.getElementById("menuSearch")
+                        .value
+                        .trim()
+                        .toLowerCase();
+
+
+        const cards =
+                document.querySelectorAll(".menu-card");
+
+
+        cards.forEach(function(card) {
+
+            const name =
+                    card.dataset.name
+                        .toLowerCase();
+
+            const category =
+                    card.dataset.category
+                        .toLowerCase();
+
+
+            let show;
+
+
+            if (search !== "") {
+
+                show =
+                    name.includes(search) ||
+                    category.includes(search);
+
+            } else {
+
+                show =
+                    category ===
+                    selectedCategory.toLowerCase();
+            }
+
+
+            card.style.display =
+                    show ? "flex" : "none";
+
+        });
+    }
+
+
+    /* =========================================
+       VALIDATION
+       ========================================= */
 
     function validateOrder() {
 
         const quantityInputs =
-                document.querySelectorAll(".quantity");
+                document.querySelectorAll(
+                        ".hidden-quantity"
+                );
 
         let hasItem = false;
 
 
         quantityInputs.forEach(function(input) {
 
-            if (!input.disabled) {
+            const quantity =
+                    parseInt(input.value);
 
-                const quantity =
-                        parseInt(input.value);
+            if (!isNaN(quantity) &&
+                quantity > 0) {
 
-                if (!isNaN(quantity) &&
-                    quantity > 0) {
-
-                    hasItem = true;
-                }
+                hasItem = true;
             }
+
         });
 
 
@@ -478,9 +1050,30 @@
         return true;
     }
 
+
+    /* =========================================
+       SAFE DISPLAY OF MENU NAME
+       ========================================= */
+
+    function escapeHtml(text) {
+
+        const div =
+                document.createElement("div");
+
+        div.textContent = text;
+
+        return div.innerHTML;
+    }
+
+
+    /* =========================================
+       INITIAL DISPLAY
+       ========================================= */
+
+    filterMenu();
+    updateCart();
+
 </script>
 
-
 </body>
-
 </html>

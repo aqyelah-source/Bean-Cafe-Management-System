@@ -10,7 +10,7 @@ public class DBConnection {
             "jdbc:mysql://localhost:3306/bean_cafe_db";
 
     private static final String USER = "root";
-    private static final String PASSWORD = "Student@12345678";
+    private static final String PASSWORD = "mypassword";
 
     public static Connection getConnection() throws SQLException {
         try {
