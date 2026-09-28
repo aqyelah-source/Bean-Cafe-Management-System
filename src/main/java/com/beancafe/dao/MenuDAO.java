@@ -71,6 +71,40 @@ public class MenuDAO implements MenuDAOInterface {
         return menuList;
     }
 
+    @Override
+    public Menu getMenuById(int menuId) {
+
+        String sql = "SELECT * FROM menu WHERE menu_id = ?";
+
+        try (Connection conn = DBConnection.getConnection();
+         PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+        stmt.setInt(1, menuId);
+
+        try (ResultSet rs = stmt.executeQuery()) {
+
+            if (rs.next()) {
+
+                Menu menu = new Menu();
+
+                menu.setMenuId(rs.getInt("menu_id"));
+                menu.setAdminId(rs.getInt("admin_id"));
+                menu.setMenuName(rs.getString("menu_name"));
+                menu.setCategory(rs.getString("category"));
+                menu.setPrice(rs.getDouble("price"));
+                menu.setAvailability(rs.getString("availability"));
+
+                return menu;
+            }
+        }
+
+    } catch (SQLException e) {
+        e.printStackTrace();
+    }
+
+    return null;
+}
+
 
     // UPDATE - Update menu
     @Override
