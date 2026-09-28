@@ -12,7 +12,10 @@ import java.util.List;
 
 public class StaffDAO {
 
-    // Get all staff
+
+    // ==========================================
+    // READ - Get all staff
+    // ==========================================
     public List<Staff> getAllStaff() {
 
         List<Staff> staffList = new ArrayList<>();
@@ -50,7 +53,10 @@ public class StaffDAO {
         return staffList;
     }
 
-    // Add new staff
+
+    // ==========================================
+    // CREATE - Add new staff
+    // ==========================================
     public boolean addStaff(Staff staff) {
 
         String userSql = "INSERT INTO user "
@@ -64,13 +70,18 @@ public class StaffDAO {
         Connection conn = null;
 
         try {
+
             conn = DBConnection.getConnection();
             conn.setAutoCommit(false);
 
             int userId;
 
-            try (PreparedStatement userStmt = conn.prepareStatement(
-                    userSql, PreparedStatement.RETURN_GENERATED_KEYS)) {
+
+            // Insert into USER table
+            try (PreparedStatement userStmt =
+                    conn.prepareStatement(
+                            userSql,
+                            PreparedStatement.RETURN_GENERATED_KEYS)) {
 
                 userStmt.setString(1, staff.getName());
                 userStmt.setString(2, staff.getUsername());
@@ -79,17 +90,24 @@ public class StaffDAO {
 
                 userStmt.executeUpdate();
 
+
+                // Get generated user_id
                 try (ResultSet rs = userStmt.getGeneratedKeys()) {
 
                     if (rs.next()) {
+
                         userId = rs.getInt(1);
+
                     } else {
+
                         conn.rollback();
                         return false;
                     }
                 }
             }
 
+
+            // Insert into STAFF table
             try (PreparedStatement staffStmt =
                     conn.prepareStatement(staffSql)) {
 
@@ -101,15 +119,20 @@ public class StaffDAO {
                 staffStmt.executeUpdate();
             }
 
+
             conn.commit();
             return true;
 
         } catch (SQLException e) {
 
             if (conn != null) {
+
                 try {
+
                     conn.rollback();
+
                 } catch (SQLException ex) {
+
                     ex.printStackTrace();
                 }
             }
@@ -120,31 +143,43 @@ public class StaffDAO {
         } finally {
 
             if (conn != null) {
+
                 try {
+
                     conn.setAutoCommit(true);
                     conn.close();
+
                 } catch (SQLException e) {
+
                     e.printStackTrace();
                 }
             }
         }
     }
 
-    // Update staff
+
+    // ==========================================
+    // UPDATE - Update staff
+    // ==========================================
     public boolean updateStaff(Staff staff) {
 
-        String userSql = "UPDATE user SET name = ?, username = ? "
-                       + "WHERE user_id = ?";
+        String userSql =
+                "UPDATE user SET name = ?, username = ? "
+              + "WHERE user_id = ?";
 
-        String staffSql = "UPDATE staff SET position = ?, shift = ? "
-                        + "WHERE staff_id = ?";
+        String staffSql =
+                "UPDATE staff SET position = ?, shift = ? "
+              + "WHERE staff_id = ?";
 
         Connection conn = null;
 
         try {
+
             conn = DBConnection.getConnection();
             conn.setAutoCommit(false);
 
+
+            // Update USER table
             try (PreparedStatement userStmt =
                     conn.prepareStatement(userSql)) {
 
@@ -155,6 +190,8 @@ public class StaffDAO {
                 userStmt.executeUpdate();
             }
 
+
+            // Update STAFF table
             try (PreparedStatement staffStmt =
                     conn.prepareStatement(staffSql)) {
 
@@ -165,15 +202,20 @@ public class StaffDAO {
                 staffStmt.executeUpdate();
             }
 
+
             conn.commit();
             return true;
 
         } catch (SQLException e) {
 
             if (conn != null) {
+
                 try {
+
                     conn.rollback();
+
                 } catch (SQLException ex) {
+
                     ex.printStackTrace();
                 }
             }
@@ -184,43 +226,59 @@ public class StaffDAO {
         } finally {
 
             if (conn != null) {
+
                 try {
+
                     conn.setAutoCommit(true);
                     conn.close();
+
                 } catch (SQLException e) {
+
                     e.printStackTrace();
                 }
             }
         }
     }
-    
-    // Delete staff
-public boolean deleteStaff(int staffId, int userId) {
 
-    String staffSql = "DELETE FROM staff WHERE staff_id = ?";
-    String userSql = "DELETE FROM user WHERE user_id = ?";
 
-    Connection conn = null;
+    // ==========================================
+    // DELETE - Delete staff
+    // ==========================================
+    public boolean deleteStaff(int staffId, int userId) {
 
-    try {
-        conn = DBConnection.getConnection();
-        conn.setAutoCommit(false);
+        String staffSql =
+                "DELETE FROM staff WHERE staff_id = ?";
 
-        // Delete from STAFF table first
-        try (PreparedStatement staffStmt =
-                conn.prepareStatement(staffSql)) {
+        String userSql =
+                "DELETE FROM user WHERE user_id = ?";
 
-            staffStmt.setInt(1, staffId);
-            staffStmt.executeUpdate();
-        }
+        Connection conn = null;
 
-        // Delete from USER table
-        try (PreparedStatement userStmt =
-                conn.prepareStatement(userSql)) {
+        try {
+
+            conn = DBConnection.getConnection();
+            conn.setAutoCommit(false);
+
+
+            // Delete from STAFF table first
+            try (PreparedStatement staffStmt =
+                    conn.prepareStatement(staffSql)) {
+
+                staffStmt.setInt(1, staffId);
+
+                staffStmt.executeUpdate();
+            }
+
+
+            // Delete from USER table
+            try (PreparedStatement userStmt =
+                    conn.prepareStatement(userSql)) {
 
                 userStmt.setInt(1, userId);
+
                 userStmt.executeUpdate();
             }
+
 
             conn.commit();
             return true;
@@ -228,9 +286,13 @@ public boolean deleteStaff(int staffId, int userId) {
         } catch (SQLException e) {
 
             if (conn != null) {
+
                 try {
+
                     conn.rollback();
+
                 } catch (SQLException ex) {
+
                     ex.printStackTrace();
                 }
             }
@@ -241,13 +303,50 @@ public boolean deleteStaff(int staffId, int userId) {
         } finally {
 
             if (conn != null) {
+
                 try {
+
                     conn.setAutoCommit(true);
                     conn.close();
+
                 } catch (SQLException e) {
+
                     e.printStackTrace();
                 }
             }
         }
+    }
+
+
+    // ==========================================
+    // Get staff_id using logged-in user's user_id
+    // ==========================================
+    public int getStaffIdByUserId(int userId) {
+
+        String sql =
+                "SELECT staff_id FROM staff WHERE user_id = ?";
+
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setInt(1, userId);
+
+
+            try (ResultSet rs = stmt.executeQuery()) {
+
+                if (rs.next()) {
+
+                    return rs.getInt("staff_id");
+                }
+            }
+
+        } catch (SQLException e) {
+
+            e.printStackTrace();
+        }
+
+
+        // Staff account was not found
+        return -1;
     }
 }
