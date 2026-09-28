@@ -5,15 +5,13 @@ import java.util.List;
 
 public interface MenuDAOInterface {
 
-    // create the menu
     boolean addMenu(Menu menu);
 
-    // read the menu
     List<Menu> getAllMenu();
 
-    // update the menu
+    Menu getMenuById(int menuId);
+
     boolean updateMenu(Menu menu);
 
-    // delete the menu
     boolean deleteMenu(int menuId);
 }
