@@ -10,9 +10,10 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
-public class MenuDAO {
+public class MenuDAO implements MenuDAOInterface {
 
     // CREATE - Add new menu
+    @Override
     public boolean addMenu(Menu menu) {
 
         String sql = "INSERT INTO menu "
@@ -38,6 +39,7 @@ public class MenuDAO {
 
 
     // READ - Get all menu
+    @Override
     public List<Menu> getAllMenu() {
 
         List<Menu> menuList = new ArrayList<>();
@@ -71,6 +73,7 @@ public class MenuDAO {
 
 
     // UPDATE - Update menu
+    @Override
     public boolean updateMenu(Menu menu) {
 
         String sql = "UPDATE menu SET "
@@ -96,6 +99,7 @@ public class MenuDAO {
 
 
     // DELETE - Delete menu
+    @Override
     public boolean deleteMenu(int menuId) {
 
         String sql = "DELETE FROM menu WHERE menu_id = ?";
