@@ -119,14 +119,6 @@
             if (!editing) {
         %>
 
-        <label>Admin ID</label>
-
-        <input type="number"
-               name="adminId"
-               value="1"
-               min="1"
-               required>
-
         <%
             }
         %>
