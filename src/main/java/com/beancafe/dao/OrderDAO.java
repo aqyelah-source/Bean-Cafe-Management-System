@@ -13,7 +13,7 @@ import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.List;
 
-public class OrderDAO {
+public class OrderDAO implements OrderDAOInterface {
 
     // CREATE - Create new order
     public boolean addOrder(Order order) {
