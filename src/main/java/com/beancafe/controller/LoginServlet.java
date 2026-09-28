@@ -6,8 +6,7 @@ import com.beancafe.util.PasswordUtil;
 
 import java.io.IOException;
 
-// NOTE: If your server is an older GlassFish/Tomcat (Servlet 4 or earlier),
-// change these imports to the javax.servlet.* equivalents instead.
+
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -15,10 +14,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 
-/**
- * Handles the login form submission from login.jsp.
- * Uses your groupmate's existing UserDAO.getUserByUsername() method.
- */
+
 @WebServlet("/LoginServlet")
 public class LoginServlet extends HttpServlet {
 
