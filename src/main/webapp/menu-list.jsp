@@ -2,218 +2,1295 @@
 <%@ page import="java.util.List" %>
 <%@ page import="com.beancafe.model.Menu" %>
 
+<%
+    // ==========================================
+    // ADMIN ONLY
+    // ==========================================
+    if (session.getAttribute("role") == null
+            || !"Admin".equalsIgnoreCase(
+                    (String) session.getAttribute("role"))) {
+
+        response.sendRedirect("login.jsp");
+        return;
+    }
+
+    // ==========================================
+    // GET MENU LIST
+    // ==========================================
+    List<Menu> menuList
+            = (List<Menu>) request.getAttribute("menuList");
+
+    String keyword
+            = request.getParameter("keyword");
+
+    if (keyword == null) {
+        keyword = "";
+    }
+%>
+
+
 <!DOCTYPE html>
+
 <html>
-<head>
-    <meta charset="UTF-8">
-    <title>Menu Management - Bean Cafe</title>
 
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            background-color: #f5f5f5;
-            margin: 0;
-            padding: 0;
-        }
 
-        .container {
-            width: 90%;
-            margin: 40px auto;
-            background: white;
-            padding: 30px;
-            border-radius: 10px;
-        }
+    <head>
 
-        h1 {
-            color: #4b2e2e;
-        }
+        <meta charset="UTF-8">
 
-        .top-bar {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
-        }
+        <title>
+            Menu Management - Bean Cafe
+        </title>
 
-        .btn {
-            padding: 10px 16px;
-            text-decoration: none;
-            border-radius: 5px;
-            color: white;
-            display: inline-block;
-        }
 
-        .btn-add {
-            background-color: #4b2e2e;
-        }
+        <style>
 
-        .btn-edit {
-            background-color: #2f7d32;
-        }
+            * {
+                box-sizing: border-box;
+            }
 
-        .btn-delete {
-            background-color: #c0392b;
-        }
 
-        .btn-back {
-            background-color: #555;
-        }
+            body {
 
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 20px;
-        }
+                margin: 0;
 
-        th, td {
-            border: 1px solid #ddd;
-            padding: 12px;
-            text-align: center;
-        }
+                font-family:
+                    Arial, sans-serif;
 
-        th {
-            background-color: #4b2e2e;
-            color: white;
-        }
+                background:
+                    #f6ede3;
 
-        tr:nth-child(even) {
-            background-color: #f9f9f9;
-        }
+                color:
+                    #2f1b10;
+            }
 
-        .available {
-            color: green;
-            font-weight: bold;
-        }
 
-        .unavailable {
-            color: red;
-            font-weight: bold;
-        }
-    </style>
-</head>
 
-<body>
+            /* =========================
+               HEADER
+               ========================= */
 
-<div class="container">
+            header {
 
-    <div class="top-bar">
-        <h1>Menu Management</h1>
+                height:
+                    82px;
 
-        <a class="btn btn-add"
-           href="${pageContext.request.contextPath}/menu?action=add">
-            + Add Menu
-        </a>
-    </div>
+                background:
+                    #f9f1e7;
 
-    <table>
+                border-top:
+                    6px solid #4b2e1e;
 
-        <thead>
-        <tr>
-            <th>ID</th>
-            <th>Menu Name</th>
-            <th>Category</th>
-            <th>Price (RM)</th>
-            <th>Availability</th>
-            <th>Action</th>
-        </tr>
-        </thead>
+                border-bottom:
+                    1px solid #dfd1c3;
 
-        <tbody>
+                padding:
+                    0 28px;
 
-        <%
-            List<Menu> menuList =
-                    (List<Menu>) request.getAttribute("menuList");
+                display:
+                    flex;
 
-            if (menuList != null && !menuList.isEmpty()) {
+                justify-content:
+                    space-between;
 
-                for (Menu menu : menuList) {
-        %>
+                align-items:
+                    center;
+            }
 
-        <tr>
 
-            <td>
-                <%= menu.getMenuId() %>
-            </td>
+            .brand {
 
-            <td>
-                <%= menu.getMenuName() %>
-            </td>
+                font-size:
+                    25px;
 
-            <td>
-                <%= menu.getCategory() %>
-            </td>
+                font-weight:
+                    bold;
 
-            <td>
-                <%= String.format("%.2f", menu.getPrice()) %>
-            </td>
+                color:
+                    #321b0f;
+            }
 
-            <td>
-                <%
-                    if ("Available".equalsIgnoreCase(
-                            menu.getAvailability())) {
-                %>
 
-                <span class="available">
-                    Available
-                </span>
+            .user-area {
 
-                <%
-                    } else {
-                %>
+                display:
+                    flex;
 
-                <span class="unavailable">
-                    Unavailable
-                </span>
+                align-items:
+                    center;
 
-                <%
-                    }
-                %>
-            </td>
+                gap:
+                    24px;
+            }
 
-            <td>
 
-                <a class="btn btn-edit"
-                   href="${pageContext.request.contextPath}/menu?action=edit&id=<%= menu.getMenuId() %>">
-                    Edit
-                </a>
+            .user-info {
 
-                <a class="btn btn-delete"
-                   href="${pageContext.request.contextPath}/menu?action=delete&id=<%= menu.getMenuId() %>"
-                   onclick="return confirm('Are you sure you want to delete this menu item?');">
-                    Delete
-                </a>
+                text-align:
+                    right;
+            }
 
-            </td>
 
-        </tr>
+            .user-info strong {
 
-        <%
+                display:
+                    block;
+
+                font-size:
+                    15px;
+            }
+
+
+            .user-info span {
+
+                display:
+                    block;
+
+                font-size:
+                    13px;
+
+                color:
+                    #7a573e;
+
+                margin-top:
+                    2px;
+            }
+
+
+            .logout {
+
+                background:
+                    #4b2e1e;
+
+                color:
+                    white;
+
+                text-decoration:
+                    none;
+
+                padding:
+                    11px 22px;
+
+                border-radius:
+                    24px;
+
+                font-weight:
+                    bold;
+            }
+
+
+            .logout:hover {
+
+                background:
+                    #6f4e37;
+            }
+
+
+
+            /* =========================
+               MAIN LAYOUT
+               ========================= */
+
+            .main-layout {
+
+                display:
+                    flex;
+
+                min-height:
+                    calc(100vh - 82px);
+            }
+
+
+
+            /* =========================
+               SIDEBAR
+               ========================= */
+
+            .sidebar {
+
+                width:
+                    235px;
+
+                flex-shrink:
+                    0;
+
+                background:
+                    #f8efe5;
+
+                border-right:
+                    1px solid #dfd1c3;
+
+                padding:
+                    28px 16px;
+            }
+
+
+            .sidebar-title {
+
+                color:
+                    #7a573e;
+
+                font-size:
+                    15px;
+
+                font-weight:
+                    bold;
+
+                margin:
+                    0 10px 18px;
+            }
+
+
+            .menu-item {
+
+                display:
+                    block;
+
+                padding:
+                    13px 16px;
+
+                margin-bottom:
+                    8px;
+
+                text-decoration:
+                    none;
+
+                color:
+                    #4b2e1e;
+
+                font-size:
+                    15px;
+
+                font-weight:
+                    600;
+
+                border-radius:
+                    20px;
+            }
+
+
+            .menu-item:hover {
+
+                background:
+                    #eadccc;
+            }
+
+
+            .menu-item.active {
+
+                background:
+                    #4b2e1e;
+
+                color:
+                    white;
+            }
+
+
+
+            /* =========================
+               CONTENT
+               ========================= */
+
+            .content {
+
+                flex:
+                    1;
+
+                padding:
+                    32px;
+
+                min-width:
+                    0;
+            }
+
+
+            .page-heading {
+
+                display:
+                    flex;
+
+                justify-content:
+                    space-between;
+
+                align-items:
+                    center;
+
+                margin-bottom:
+                    25px;
+            }
+
+
+            .page-heading h1 {
+
+                margin:
+                    0 0 8px;
+
+                font-size:
+                    28px;
+
+                color:
+                    #2f1b10;
+            }
+
+
+            .page-heading p {
+
+                margin:
+                    0;
+
+                color:
+                    #7a573e;
+
+                font-size:
+                    16px;
+            }
+
+
+
+            /* =========================
+               BUTTONS
+               ========================= */
+
+            .btn {
+
+                display:
+                    inline-flex;
+
+                align-items:
+                    center;
+
+                justify-content:
+                    center;
+
+                text-decoration:
+                    none;
+
+                border:
+                    none;
+
+                border-radius:
+                    8px;
+
+                font-size:
+                    14px;
+
+                font-weight:
+                    bold;
+
+                cursor:
+                    pointer;
+            }
+
+
+            .btn-add {
+
+                padding:
+                    13px 20px;
+
+                background:
+                    #4b2e1e;
+
+                color:
+                    white;
+            }
+
+
+            .btn-add:hover {
+
+                background:
+                    #6f4e37;
+            }
+
+
+            .btn-edit {
+
+                padding:
+                    8px 14px;
+
+                background:
+                    #eadccc;
+
+                color:
+                    #4b2e1e;
+            }
+
+
+            .btn-edit:hover {
+
+                background:
+                    #d8c4b2;
+            }
+
+
+            .btn-delete {
+
+                padding:
+                    8px 14px;
+
+                margin-left:
+                    5px;
+
+                background:
+                    #f4d9d5;
+
+                color:
+                    #96352e;
+            }
+
+
+            .btn-delete:hover {
+
+                background:
+                    #ecc5c0;
+            }
+
+
+
+
+            /* =========================
+               TABLE CARD
+               ========================= */
+
+            .table-card {
+
+                background:
+                    #fffaf5;
+
+                border:
+                    1px solid #e4d7ca;
+
+                border-radius:
+                    14px;
+
+                padding:
+                    24px;
+            }
+
+
+            .table-card h2 {
+
+                margin:
+                    0 0 7px;
+
+                color:
+                    #321b0f;
+
+                font-size:
+                    21px;
+            }
+
+
+            .table-description {
+
+                margin:
+                    0 0 20px;
+
+                color:
+                    #7a573e;
+
+                font-size:
+                    14px;
+            }
+
+
+
+            /* =========================
+               TABLE
+               ========================= */
+
+            table {
+
+                width:
+                    100%;
+
+                border-collapse:
+                    collapse;
+            }
+
+
+            th,
+            td {
+
+                padding:
+                    14px;
+
+                text-align:
+                    left;
+
+                border-bottom:
+                    1px solid #e4d7ca;
+            }
+
+
+            th {
+
+                background:
+                    #4b2e1e;
+
+                color:
+                    white;
+
+                font-size:
+                    14px;
+            }
+
+
+            th:first-child {
+
+                border-radius:
+                    8px 0 0 0;
+            }
+
+
+            th:last-child {
+
+                border-radius:
+                    0 8px 0 0;
+            }
+
+
+            td {
+
+                font-size:
+                    14px;
+            }
+
+
+            tbody tr:hover {
+
+                background:
+                    #f8eee5;
+            }
+
+
+            .action-column {
+
+                white-space:
+                    nowrap;
+            }
+
+
+            .no-data {
+
+                text-align:
+                    center;
+
+                color:
+                    #7a573e;
+
+                padding:
+                    30px;
+            }
+
+
+
+            /* =========================
+               AVAILABILITY STATUS
+               ========================= */
+
+            .status {
+
+                display:
+                    inline-block;
+
+                padding:
+                    6px 12px;
+
+                border-radius:
+                    18px;
+
+                font-size:
+                    13px;
+
+                font-weight:
+                    bold;
+            }
+
+
+            .available {
+
+                background:
+                    #dff3e4;
+
+                color:
+                    #26743b;
+            }
+
+
+            .unavailable {
+
+                background:
+                    #f4d9d5;
+
+                color:
+                    #96352e;
+            }
+
+
+
+            /* =========================
+               RESPONSIVE
+               ========================= */
+
+            @media (max-width: 800px) {
+
+                .sidebar {
+
+                    width:
+                        190px;
                 }
 
-            } else {
-        %>
 
-        <tr>
-            <td colspan="6">
-                No menu items found.
-            </td>
-        </tr>
+                .page-heading {
 
-        <%
+                    align-items:
+                        flex-start;
+
+                    gap:
+                        20px;
+                }
             }
-        %>
 
-        </tbody>
+            /* =========================
+               SEARCH
+               ========================= */
 
-    </table>
+            .search-card {
 
-    <br>
+                background:
+                    #fffaf5;
 
-    <a href="${pageContext.request.contextPath}/order?action=add">
-        Back to POS
-    </a>
+                border:
+                    1px solid #e4d7ca;
 
-</div>
+                border-radius:
+                    14px;
 
-</body>
+                padding:
+                    20px;
+
+                margin-bottom:
+                    24px;
+            }
+
+
+            .search-form {
+
+                display:
+                    flex;
+
+                gap:
+                    10px;
+            }
+
+
+            .search-form input {
+
+                flex:
+                    1;
+
+                height:
+                    44px;
+
+                padding:
+                    0 14px;
+
+                border:
+                    1px solid #d8c7b7;
+
+                border-radius:
+                    8px;
+
+                font-family:
+                    Arial, sans-serif;
+
+                font-size:
+                    14px;
+
+                outline:
+                    none;
+            }
+
+
+            .search-form input:focus {
+
+                border-color:
+                    #7a573e;
+            }
+
+
+            .btn-search {
+
+                padding:
+                    0 22px;
+
+                height:
+                    44px;
+
+                border:
+                    none;
+
+                border-radius:
+                    8px;
+
+                background:
+                    #6f4e37;
+
+                color:
+                    white;
+
+                font-size:
+                    14px;
+
+                font-weight:
+                    bold;
+
+                cursor:
+                    pointer;
+            }
+
+
+            .btn-search:hover {
+
+                background:
+                    #4b2e1e;
+            }
+
+
+            .btn-show {
+
+                height:
+                    44px;
+
+                padding:
+                    0 20px;
+
+                background:
+                    #eadccc;
+
+                color:
+                    #4b2e1e;
+
+                text-decoration:
+                    none;
+
+                border-radius:
+                    8px;
+
+                display:
+                    inline-flex;
+
+                align-items:
+                    center;
+
+                justify-content:
+                    center;
+
+                font-size:
+                    14px;
+
+                font-weight:
+                    bold;
+            }
+
+
+            .btn-show:hover {
+
+                background:
+                    #ddcabb;
+            }
+
+        </style>
+
+    </head>
+
+
+
+    <body>
+
+
+
+        <!-- =========================
+             HEADER
+             ========================= -->
+
+        <header>
+
+
+            <div class="brand">
+
+                Bean Cafe!
+
+            </div>
+
+
+            <div class="user-area">
+
+
+                <div class="user-info">
+
+
+                    <strong>
+
+                        <%= session.getAttribute("name")%>
+
+                    </strong>
+
+
+                    <span>
+
+                        Admin
+
+                    </span>
+
+
+                </div>
+
+
+                <a class="logout"
+                   href="${pageContext.request.contextPath}/LogoutServlet">
+
+                    Logout
+
+                </a>
+
+
+            </div>
+
+
+        </header>
+
+
+
+
+        <div class="main-layout">
+
+
+
+            <!-- =========================
+                 ADMIN SIDEBAR
+                 ========================= -->
+
+            <div class="sidebar">
+
+
+                <div class="sidebar-title">
+
+                    Admin Menu
+
+                </div>
+
+
+
+                <a class="menu-item"
+                   href="${pageContext.request.contextPath}/admin-dashboard">
+
+                    Dashboard
+
+                </a>
+
+
+
+                <a class="menu-item"
+                   href="${pageContext.request.contextPath}/staff">
+
+                    Staff Management
+
+                </a>
+
+
+
+                <a class="menu-item active"
+                   href="${pageContext.request.contextPath}/menu">
+
+                    Menu Management
+
+                </a>
+
+
+
+                <a class="menu-item"
+                   href="${pageContext.request.contextPath}/order">
+
+                    Order Management
+
+                </a>
+
+
+
+                <a class="menu-item"
+                   href="${pageContext.request.contextPath}/order-history">
+
+                    Order History
+
+                </a>
+
+
+
+                <a class="menu-item"
+                   href="${pageContext.request.contextPath}/report">
+
+                    Order Summary & Report
+
+                </a>
+
+
+            </div>
+
+
+
+
+            <!-- =========================
+                 MAIN CONTENT
+                 ========================= -->
+
+            <main class="content">
+
+
+
+                <!-- =========================
+                     PAGE HEADING
+                     ========================= -->
+
+                <div class="page-heading">
+
+
+                    <div>
+
+
+                        <h1>
+
+                            Menu Management
+
+                        </h1>
+
+
+                        <p>
+
+                            Manage Bean Cafe menu items,
+                            prices and availability.
+
+                        </p>
+
+
+                    </div>
+
+
+
+                    <a class="btn btn-add"
+                       href="${pageContext.request.contextPath}/menu?action=add">
+
+                        + Add Menu
+
+                    </a>
+
+
+                </div>
+
+                <!-- =========================
+                     SEARCH MENU
+                     ========================= -->
+
+                <div class="search-card">
+
+                    <form class="search-form"
+                          action="${pageContext.request.contextPath}/menu"
+                          method="get">
+
+
+                        <input type="hidden"
+                               name="action"
+                               value="search">
+
+
+                        <input type="text"
+                               name="keyword"
+                               placeholder="Search by menu name or category..."
+                               value="<%= keyword%>">
+
+
+                        <button type="submit"
+                                class="btn-search">
+
+                            Search
+
+                        </button>
+
+
+                        <a class="btn-show"
+                           href="${pageContext.request.contextPath}/menu">
+
+                            Show All
+
+                        </a>
+
+                    </form>
+
+                </div>
+
+
+                <!-- =========================
+                     MENU TABLE CARD
+                     ========================= -->
+
+                <div class="table-card">
+
+
+                    <h2>
+
+                        Menu Records
+
+                    </h2>
+
+
+                    <p class="table-description">
+
+                        View, update or delete
+                        existing menu items.
+
+                    </p>
+
+
+
+                    <table>
+
+
+
+                        <thead>
+
+
+                            <tr>
+
+
+                                <th>
+                                    ID
+                                </th>
+
+
+                                <th>
+                                    Menu Name
+                                </th>
+
+
+                                <th>
+                                    Category
+                                </th>
+
+
+                                <th>
+                                    Price (RM)
+                                </th>
+
+
+                                <th>
+                                    Availability
+                                </th>
+
+
+                                <th>
+                                    Action
+                                </th>
+
+
+                            </tr>
+
+
+                        </thead>
+
+
+
+
+                        <tbody>
+
+
+                            <%
+                                if (menuList != null
+                                        && !menuList.isEmpty()) {
+
+                                    for (Menu menu
+                                            : menuList) {
+                            %>
+
+
+
+                            <tr>
+
+
+                                <!-- MENU ID -->
+
+                                <td>
+
+                                    <%= menu.getMenuId()%>
+
+                                </td>
+
+
+
+                                <!-- MENU NAME -->
+
+                                <td>
+
+                                    <%= menu.getMenuName()%>
+
+                                </td>
+
+
+
+                                <!-- CATEGORY -->
+
+                                <td>
+
+                                    <%= menu.getCategory()%>
+
+                                </td>
+
+
+
+                                <!-- PRICE -->
+
+                                <td>
+
+                                    RM
+                                    <%= String.format(
+                                            "%.2f",
+                                            menu.getPrice())%>
+
+                                </td>
+
+
+
+                                <!-- AVAILABILITY -->
+
+                                <td>
+
+
+                                    <%
+                                        if ("Available"
+                                                .equalsIgnoreCase(
+                                                        menu.getAvailability())) {
+                                    %>
+
+
+                                    <span class="status available">
+
+                                        Available
+
+                                    </span>
+
+
+                                    <%
+                                    } else {
+                                    %>
+
+
+                                    <span class="status unavailable">
+
+                                        Unavailable
+
+                                    </span>
+
+
+                                    <%
+                                        }
+                                    %>
+
+
+                                </td>
+
+
+
+                                <!-- ACTION -->
+
+                                <td class="action-column">
+
+
+                                    <a class="btn btn-edit"
+                                       href="${pageContext.request.contextPath}/menu?action=edit&id=<%= menu.getMenuId()%>">
+
+                                        Edit
+
+                                    </a>
+
+
+
+                                    <a class="btn btn-delete"
+                                       href="${pageContext.request.contextPath}/menu?action=delete&id=<%= menu.getMenuId()%>"
+                                       onclick="return confirmDelete('<%= menu.getMenuName()%>');">
+
+                                        Delete
+
+                                    </a>
+
+
+                                </td>
+
+
+                            </tr>
+
+
+
+                            <%
+                                }
+
+                            } else {
+                            %>
+
+
+
+                            <tr>
+
+
+                                <td colspan="6"
+                                    class="no-data">
+
+                                    No menu items found.
+
+                                </td>
+
+
+                            </tr>
+
+
+
+                            <%
+                                }
+                            %>
+
+
+                        </tbody>
+
+
+                    </table>
+
+
+                </div>
+
+
+            </main>
+
+
+        </div>
+
+
+
+        <!-- =========================
+             DELETE CONFIRMATION
+             ========================= -->
+
+        <script>
+
+            function confirmDelete(menuName) {
+
+                return confirm(
+                        "Are you sure you want to delete "
+                        + menuName
+                        + "?"
+                        );
+            }
+
+        </script>
+
+
+    </body>
+
 </html>
