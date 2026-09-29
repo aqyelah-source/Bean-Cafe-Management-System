@@ -1,5 +1,6 @@
 package com.beancafe.dao;
 
+import com.beancafe.model.Order;
 import com.beancafe.model.Report;
 import com.beancafe.util.DBConnection;
 
@@ -11,41 +12,98 @@ import java.sql.Timestamp;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 public class ReportDAO {
 
-    // Generate monthly report from completed orders
+    // =========================
+    // GENERATE REPORT SUMMARY
+    // =========================
     public Report generateMonthlyReport(
-            int adminId, int month, int year) {
+            int adminId,
+            int month,
+            int year) {
 
-        String sql = "SELECT COUNT(*) AS total_orders, "
-                   + "COALESCE(SUM(total_price), 0) AS total_sales "
-                   + "FROM orders "
-                   + "WHERE MONTH(order_date) = ? "
-                   + "AND YEAR(order_date) = ? "
-                   + "AND status = 'Completed'";
+        String sql;
 
-        Report report = new Report();
+        if (month == 0) {
 
-        try (Connection conn = DBConnection.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            // All months in selected year
+            sql = "SELECT "
+                    + "COUNT(*) AS total_orders, "
+                    + "COALESCE(SUM(CASE "
+                    + "WHEN status = 'Completed' "
+                    + "THEN total_price "
+                    + "ELSE 0 END), 0) "
+                    + "AS total_sales "
+                    + "FROM orders "
+                    + "WHERE YEAR(order_date) = ?";
 
-            stmt.setInt(1, month);
-            stmt.setInt(2, year);
+        } else {
 
-            try (ResultSet rs = stmt.executeQuery()) {
+            // Selected month and year
+            sql = "SELECT "
+                    + "COUNT(*) AS total_orders, "
+                    + "COALESCE(SUM(CASE "
+                    + "WHEN status = 'Completed' "
+                    + "THEN total_price "
+                    + "ELSE 0 END), 0) "
+                    + "AS total_sales "
+                    + "FROM orders "
+                    + "WHERE MONTH(order_date) = ? "
+                    + "AND YEAR(order_date) = ?";
+        }
+
+        Report report
+                = new Report();
+
+        try (Connection conn
+                = DBConnection.getConnection(); PreparedStatement stmt
+                = conn.prepareStatement(sql)) {
+
+            if (month == 0) {
+
+                stmt.setInt(
+                        1,
+                        year);
+
+            } else {
+
+                stmt.setInt(
+                        1,
+                        month);
+
+                stmt.setInt(
+                        2,
+                        year);
+            }
+
+            try (ResultSet rs
+                    = stmt.executeQuery()) {
 
                 if (rs.next()) {
 
-                    report.setAdminId(adminId);
-                    report.setReportMonth(month);
-                    report.setReportYear(year);
+                    report.setAdminId(
+                            adminId);
+
+                    report.setReportMonth(
+                            month);
+
+                    report.setReportYear(
+                            year);
+
                     report.setTotalOrders(
-                            rs.getInt("total_orders"));
+                            rs.getInt(
+                                    "total_orders"));
+
                     report.setTotalSales(
-                            rs.getDouble("total_sales"));
-                    report.setGeneratedAt(LocalDateTime.now());
+                            rs.getDouble(
+                                    "total_sales"));
+
+                    report.setGeneratedAt(
+                            LocalDateTime.now());
                 }
             }
 
@@ -56,73 +114,162 @@ public class ReportDAO {
         return report;
     }
 
+    // =========================
+    // MONTHLY SALES FOR GRAPH
+    // =========================
+    public Map<Integer, Double>
+            getMonthlySalesByYear(
+                    int year) {
 
-    // Save generated report into REPORT table
-    public boolean saveReport(Report report) {
+        Map<Integer, Double> salesByMonth
+                = new LinkedHashMap<>();
 
-        String sql = "INSERT INTO report "
-                   + "(admin_id, report_month, report_year, "
-                   + "total_orders, total_sales, generated_at) "
-                   + "VALUES (?, ?, ?, ?, ?, ?)";
+        // January until December
+        for (int month = 1;
+                month <= 12;
+                month++) {
 
-        try (Connection conn = DBConnection.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
-
-            stmt.setInt(1, report.getAdminId());
-            stmt.setInt(2, report.getReportMonth());
-            stmt.setInt(3, report.getReportYear());
-            stmt.setInt(4, report.getTotalOrders());
-            stmt.setDouble(5, report.getTotalSales());
-            stmt.setTimestamp(
-                    6,
-                    Timestamp.valueOf(report.getGeneratedAt()));
-
-            return stmt.executeUpdate() > 0;
-
-        } catch (SQLException e) {
-            e.printStackTrace();
-            return false;
+            salesByMonth.put(
+                    month,
+                    0.0);
         }
-    }
 
+        String sql
+                = "SELECT "
+                + "MONTH(order_date) AS sales_month, "
+                + "COALESCE(SUM(total_price), 0) "
+                + "AS total_sales "
+                + "FROM orders "
+                + "WHERE YEAR(order_date) = ? "
+                + "AND status = 'Completed' "
+                + "GROUP BY MONTH(order_date) "
+                + "ORDER BY MONTH(order_date)";
 
-    // READ - View saved reports
-    public List<Report> getAllReports() {
+        try (Connection conn
+                = DBConnection.getConnection(); PreparedStatement stmt
+                = conn.prepareStatement(sql)) {
 
-        List<Report> reportList = new ArrayList<>();
+            stmt.setInt(
+                    1,
+                    year);
 
-        String sql = "SELECT * FROM report ORDER BY generated_at DESC";
+            try (ResultSet rs
+                    = stmt.executeQuery()) {
 
-        try (Connection conn = DBConnection.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql);
-             ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
 
-            while (rs.next()) {
+                    int month
+                            = rs.getInt(
+                                    "sales_month");
 
-                Report report = new Report();
+                    double sales
+                            = rs.getDouble(
+                                    "total_sales");
 
-                report.setReportId(rs.getInt("report_id"));
-                report.setAdminId(rs.getInt("admin_id"));
-                report.setReportMonth(rs.getInt("report_month"));
-                report.setReportYear(rs.getInt("report_year"));
-                report.setTotalOrders(rs.getInt("total_orders"));
-                report.setTotalSales(rs.getDouble("total_sales"));
-
-                Timestamp timestamp =
-                        rs.getTimestamp("generated_at");
-
-                if (timestamp != null) {
-                    report.setGeneratedAt(
-                            timestamp.toLocalDateTime());
+                    salesByMonth.put(
+                            month,
+                            sales);
                 }
-
-                reportList.add(report);
             }
 
         } catch (SQLException e) {
             e.printStackTrace();
         }
 
-        return reportList;
+        return salesByMonth;
+    }
+
+    // =========================
+    // ORDER SUMMARY
+    // =========================
+    public List<Order> getOrdersForReport(
+            int month,
+            int year) {
+
+        List<Order> orderList
+                = new ArrayList<>();
+
+        String sql;
+
+        if (month == 0) {
+
+            sql = "SELECT * FROM orders "
+                    + "WHERE YEAR(order_date) = ? "
+                    + "ORDER BY order_date DESC";
+
+        } else {
+
+            sql = "SELECT * FROM orders "
+                    + "WHERE MONTH(order_date) = ? "
+                    + "AND YEAR(order_date) = ? "
+                    + "ORDER BY order_date DESC";
+        }
+
+        try (Connection conn
+                = DBConnection.getConnection(); PreparedStatement stmt
+                = conn.prepareStatement(sql)) {
+
+            if (month == 0) {
+
+                stmt.setInt(
+                        1,
+                        year);
+
+            } else {
+
+                stmt.setInt(
+                        1,
+                        month);
+
+                stmt.setInt(
+                        2,
+                        year);
+            }
+
+            try (ResultSet rs
+                    = stmt.executeQuery()) {
+
+                while (rs.next()) {
+
+                    Order order
+                            = new Order();
+
+                    order.setOrderId(
+                            rs.getInt(
+                                    "order_id"));
+
+                    order.setStaffId(
+                            rs.getInt(
+                                    "staff_id"));
+
+                    Timestamp orderDate
+                            = rs.getTimestamp(
+                                    "order_date");
+
+                    if (orderDate != null) {
+
+                        order.setOrderDate(
+                                orderDate
+                                        .toLocalDateTime());
+                    }
+
+                    order.setTotalPrice(
+                            rs.getDouble(
+                                    "total_price"));
+
+                    order.setStatus(
+                            rs.getString(
+                                    "status"));
+
+                    orderList.add(
+                            order);
+                }
+            }
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        return orderList;
     }
 }
