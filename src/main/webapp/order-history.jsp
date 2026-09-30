@@ -14,6 +14,9 @@
         return;
     }
 
+    // ==========================================
+    // GET DATA FROM SERVLET
+    // ==========================================
     List<OrderHistory> historyList
             = (List<OrderHistory>) request.getAttribute(
                     "historyList");
@@ -21,13 +24,30 @@
     Integer searchedOrderId
             = (Integer) request.getAttribute(
                     "searchedOrderId");
+
+    Integer currentPageObj
+            = (Integer) request.getAttribute(
+                    "currentPage");
+
+    Integer totalPagesObj
+            = (Integer) request.getAttribute(
+                    "totalPages");
+
+    int currentPage
+            = currentPageObj != null
+            ? currentPageObj
+            : 1;
+
+    int totalPages
+            = totalPagesObj != null
+            ? totalPagesObj
+            : 0;
 %>
 
 
 <!DOCTYPE html>
 
 <html>
-
 
     <head>
 
@@ -46,7 +66,6 @@
 
 
             body {
-
                 margin: 0;
 
                 font-family:
@@ -65,7 +84,6 @@
                ========================= */
 
             header {
-
                 height:
                     82px;
 
@@ -93,7 +111,6 @@
 
 
             .brand {
-
                 font-size:
                     25px;
 
@@ -106,7 +123,6 @@
 
 
             .user-area {
-
                 display:
                     flex;
 
@@ -119,14 +135,12 @@
 
 
             .user-info {
-
                 text-align:
                     right;
             }
 
 
             .user-info strong {
-
                 display:
                     block;
 
@@ -136,7 +150,6 @@
 
 
             .user-info span {
-
                 display:
                     block;
 
@@ -152,7 +165,6 @@
 
 
             .logout {
-
                 background:
                     #4b2e1e;
 
@@ -174,7 +186,6 @@
 
 
             .logout:hover {
-
                 background:
                     #6f4e37;
             }
@@ -185,7 +196,6 @@
                ========================= */
 
             .main-layout {
-
                 display:
                     flex;
 
@@ -199,7 +209,6 @@
                ========================= */
 
             .sidebar {
-
                 width:
                     235px;
 
@@ -218,7 +227,6 @@
 
 
             .sidebar-title {
-
                 color:
                     #7a573e;
 
@@ -234,7 +242,6 @@
 
 
             .menu-item {
-
                 display:
                     block;
 
@@ -262,14 +269,12 @@
 
 
             .menu-item:hover {
-
                 background:
                     #eadccc;
             }
 
 
             .menu-item.active {
-
                 background:
                     #4b2e1e;
 
@@ -283,7 +288,6 @@
                ========================= */
 
             .content {
-
                 flex:
                     1;
 
@@ -296,14 +300,12 @@
 
 
             .page-heading {
-
                 margin-bottom:
                     25px;
             }
 
 
             .page-heading h1 {
-
                 margin:
                     0 0 8px;
 
@@ -316,7 +318,6 @@
 
 
             .page-heading p {
-
                 margin:
                     0;
 
@@ -333,7 +334,6 @@
                ========================= */
 
             .search-card {
-
                 background:
                     #fffaf5;
 
@@ -352,7 +352,6 @@
 
 
             .search-form {
-
                 display:
                     flex;
 
@@ -362,7 +361,6 @@
 
 
             .search-form input {
-
                 flex:
                     1;
 
@@ -390,14 +388,12 @@
 
 
             .search-form input:focus {
-
                 border-color:
                     #7a573e;
             }
 
 
             .btn-search {
-
                 height:
                     44px;
 
@@ -428,14 +424,12 @@
 
 
             .btn-search:hover {
-
                 background:
                     #4b2e1e;
             }
 
 
             .btn-show {
-
                 height:
                     44px;
 
@@ -476,7 +470,6 @@
                ========================= */
 
             .table-card {
-
                 background:
                     #fffaf5;
 
@@ -492,7 +485,6 @@
 
 
             .table-card h2 {
-
                 margin:
                     0 0 7px;
 
@@ -505,7 +497,6 @@
 
 
             .table-card p {
-
                 margin:
                     0 0 20px;
 
@@ -522,7 +513,6 @@
                ========================= */
 
             table {
-
                 width:
                     100%;
 
@@ -533,7 +523,6 @@
 
             th,
             td {
-
                 padding:
                     14px;
 
@@ -546,7 +535,6 @@
 
 
             th {
-
                 background:
                     #4b2e1e;
 
@@ -559,28 +547,24 @@
 
 
             th:first-child {
-
                 border-radius:
                     8px 0 0 0;
             }
 
 
             th:last-child {
-
                 border-radius:
                     0 8px 0 0;
             }
 
 
             tbody tr:hover {
-
                 background:
                     #f8eee5;
             }
 
 
             .no-data {
-
                 text-align:
                     center;
 
@@ -597,7 +581,6 @@
                ========================= */
 
             .status {
-
                 display:
                     inline-block;
 
@@ -616,7 +599,6 @@
 
 
             .status-pending {
-
                 background:
                     #f1e3d6;
 
@@ -626,7 +608,6 @@
 
 
             .status-preparing {
-
                 background:
                     #fff0d4;
 
@@ -636,7 +617,6 @@
 
 
             .status-ready {
-
                 background:
                     #dcecf6;
 
@@ -646,7 +626,6 @@
 
 
             .status-completed {
-
                 background:
                     #dff3e4;
 
@@ -656,7 +635,6 @@
 
 
             .status-cancelled {
-
                 background:
                     #f4d9d5;
 
@@ -664,6 +642,93 @@
                     #96352e;
             }
 
+
+            /* =========================
+               PAGINATION
+               ========================= */
+
+            .pagination {
+                display:
+                    flex;
+
+                justify-content:
+                    center;
+
+                align-items:
+                    center;
+
+                gap:
+                    14px;
+
+                margin-top:
+                    22px;
+            }
+
+
+            .pagination a {
+                text-decoration:
+                    none;
+
+                background:
+                    #4b2e1e;
+
+                color:
+                    white;
+
+                padding:
+                    9px 18px;
+
+                border-radius:
+                    20px;
+
+                font-size:
+                    14px;
+
+                font-weight:
+                    bold;
+            }
+
+
+            .pagination a:hover {
+                background:
+                    #6f4e37;
+            }
+
+
+            .pagination .disabled {
+                background:
+                    #d8c7b7;
+
+                color:
+                    #8b7565;
+
+                padding:
+                    9px 18px;
+
+                border-radius:
+                    20px;
+
+                font-size:
+                    14px;
+
+                font-weight:
+                    bold;
+
+                cursor:
+                    not-allowed;
+            }
+
+
+            .page-info {
+                color:
+                    #4b2e1e;
+
+                font-size:
+                    14px;
+
+                font-weight:
+                    bold;
+            }
 
         </style>
 
@@ -674,13 +739,14 @@
     <body>
 
 
+        <!-- =========================
+             HEADER
+             ========================= -->
+
         <header>
 
-
             <div class="brand">
-
                 Bean Cafe!
-
             </div>
 
 
@@ -689,20 +755,13 @@
 
                 <div class="user-info">
 
-
                     <strong>
-
                         <%= session.getAttribute("name")%>
-
                     </strong>
 
-
                     <span>
-
                         Admin
-
                     </span>
-
 
                 </div>
 
@@ -716,7 +775,6 @@
 
 
             </div>
-
 
         </header>
 
@@ -736,30 +794,36 @@
                     Admin Menu
                 </div>
 
+
                 <a class="menu-item"
                    href="${pageContext.request.contextPath}/admin-dashboard">
                     Dashboard
                 </a>
+
 
                 <a class="menu-item"
                    href="${pageContext.request.contextPath}/admin-staff">
                     Staff Management
                 </a>
 
+
                 <a class="menu-item"
                    href="${pageContext.request.contextPath}/menu">
                     Menu Management
                 </a>
+
 
                 <a class="menu-item"
                    href="${pageContext.request.contextPath}/admin-order">
                     Order Management
                 </a>
 
+
                 <a class="menu-item active"
-                    href="${pageContext.request.contextPath}/order-history">
-                     Order History
-                 </a>
+                   href="${pageContext.request.contextPath}/order-history">
+                    Order History
+                </a>
+
 
                 <a class="menu-item"
                    href="${pageContext.request.contextPath}/report">
@@ -779,21 +843,14 @@
 
                 <div class="page-heading">
 
-
                     <h1>
-
                         Order History
-
                     </h1>
 
-
                     <p>
-
                         View the history of customer
                         order status updates.
-
                     </p>
-
 
                 </div>
 
@@ -856,17 +913,13 @@
 
 
                     <h2>
-
                         Order History Records
-
                     </h2>
 
 
                     <p>
-
                         View previous status records
                         for customer orders.
-
                     </p>
 
 
@@ -874,7 +927,6 @@
 
 
                         <thead>
-
 
                             <tr>
 
@@ -895,7 +947,6 @@
                                 </th>
 
                             </tr>
-
 
                         </thead>
 
@@ -945,21 +996,16 @@
 
 
                                 <td>
-
                                     <%= history.getHistoryId()%>
-
                                 </td>
 
 
                                 <td>
-
                                     #<%= history.getOrderId()%>
-
                                 </td>
 
 
                                 <td>
-
 
                                     <span class="status <%= statusClass%>">
 
@@ -967,14 +1013,11 @@
 
                                     </span>
 
-
                                 </td>
 
 
                                 <td>
-
                                     <%= history.getUpdatedAt()%>
-
                                 </td>
 
 
@@ -990,14 +1033,12 @@
 
                             <tr>
 
-
                                 <td colspan="4"
                                     class="no-data">
 
                                     No order history found.
 
                                 </td>
-
 
                             </tr>
 
@@ -1011,6 +1052,89 @@
 
 
                     </table>
+
+
+
+                    <!-- =========================
+                         PAGINATION
+                         ========================= -->
+
+                    <% if (totalPages > 0) { %>
+
+
+                    <div class="pagination">
+
+
+                        <!-- PREVIOUS BUTTON -->
+
+                        <% if (currentPage > 1) { %>
+
+
+                        <a href="${pageContext.request.contextPath}/order-history?page=<%= currentPage - 1%><%= searchedOrderId != null
+                                ? "&action=search&orderId=" + searchedOrderId
+                                : ""%>">
+
+                            Previous
+
+                        </a>
+
+
+                        <% } else { %>
+
+
+                        <span class="disabled">
+
+                            Previous
+
+                        </span>
+
+
+                        <% } %>
+
+
+
+                        <!-- CURRENT PAGE -->
+
+                        <span class="page-info">
+
+                            Page <%= currentPage%>
+                            of <%= totalPages%>
+
+                        </span>
+
+
+
+                        <!-- NEXT BUTTON -->
+
+                        <% if (currentPage < totalPages) { %>
+
+
+                        <a href="${pageContext.request.contextPath}/order-history?page=<%= currentPage + 1%><%= searchedOrderId != null
+                                ? "&action=search&orderId=" + searchedOrderId
+                                : ""%>">
+
+                            Next
+
+                        </a>
+
+
+                        <% } else { %>
+
+
+                        <span class="disabled">
+
+                            Next
+
+                        </span>
+
+
+                        <% } %>
+
+
+                    </div>
+
+
+                    <% } %>
 
 
                 </div>

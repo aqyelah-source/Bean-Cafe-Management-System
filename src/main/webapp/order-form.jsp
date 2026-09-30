@@ -208,6 +208,15 @@
             opacity: 0.55;
             cursor: not-allowed;
         }
+        
+        .menu-image {
+            width: 100%;
+            height: 120px;
+            object-fit: cover;
+            border-radius: 10px;
+            margin-bottom: 12px;
+            display: block;
+        }
 
         .menu-name {
             font-weight: 700;
@@ -598,6 +607,10 @@
                         <% if (available) { %>
                         onclick="addItem(<%= menu.getMenuId() %>)"
                         <% } %>>
+                        
+                        <img class="menu-image"
+                             src="${pageContext.request.contextPath}/images/menu/<%= menu.getMenuId() %>.jpg"
+                             alt="<%= menu.getMenuName() %>">
 
                         <div class="menu-name">
                             <%= menu.getMenuName() %>
