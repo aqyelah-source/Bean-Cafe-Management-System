@@ -625,11 +625,11 @@
 
 
                 <a class="menu-item"
-                   href="${pageContext.request.contextPath}/staff">
+                    href="${pageContext.request.contextPath}/admin-staff">
 
-                    Staff Management
+                     Staff Management
 
-                </a>
+                 </a>
 
 
                 <a class="menu-item"
@@ -641,11 +641,11 @@
 
 
                 <a class="menu-item"
-                   href="${pageContext.request.contextPath}/order">
+                    href="${pageContext.request.contextPath}/admin-order">
 
-                    Order Management
+                     Order Management
 
-                </a>
+                 </a>
 
 
                 <a class="menu-item"

@@ -26,6 +26,39 @@
     if (keyword == null) {
         keyword = "";
     }
+    
+        String selectedCategory
+            = (String) request.getAttribute("selectedCategory");
+
+        if (selectedCategory == null) {
+            selectedCategory = "All";
+        }
+
+        Integer currentPageObj
+                = (Integer) request.getAttribute("currentPage");
+
+        Integer totalPagesObj
+                = (Integer) request.getAttribute("totalPages");
+
+        int currentPage
+                = currentPageObj != null ? currentPageObj : 1;
+
+        int totalPages
+                = totalPagesObj != null ? totalPagesObj : 1;
+        
+                
+        Boolean searchModeObj
+                = (Boolean) request.getAttribute("searchMode");
+
+        boolean searchMode
+                = searchModeObj != null && searchModeObj;
+
+        String searchKeyword
+                = (String) request.getAttribute("searchKeyword");
+
+        if (searchKeyword == null) {
+            searchKeyword = "";
+        }
 %>
 
 
@@ -799,6 +832,73 @@
                 background:
                     #ddcabb;
             }
+            
+            /* =========================
+                CATEGORY FILTER
+                ========================= */
+
+             .category-filter {
+                 display: flex;
+                 align-items: center;
+                 gap: 10px;
+                 margin-bottom: 20px;
+             }
+
+             .category-filter label {
+                 font-size: 14px;
+                 font-weight: bold;
+                 color: #4b2e1e;
+             }
+
+             .category-filter select {
+                 padding: 9px 14px;
+                 border: 1px solid #d8c7b7;
+                 border-radius: 8px;
+                 background: white;
+                 color: #4b2e1e;
+                 font-size: 14px;
+                 outline: none;
+                 cursor: pointer;
+             }
+
+
+             /* =========================
+                PAGINATION
+                ========================= */
+
+             .pagination {
+                 display: flex;
+                 justify-content: center;
+                 align-items: center;
+                 gap: 14px;
+                 margin-top: 22px;
+             }
+
+             .page-btn {
+                 padding: 9px 16px;
+                 background: #4b2e1e;
+                 color: white;
+                 text-decoration: none;
+                 border-radius: 8px;
+                 font-size: 14px;
+                 font-weight: bold;
+             }
+
+             .page-btn:hover {
+                 background: #6f4e37;
+             }
+
+             .page-btn.disabled {
+                 background: #ddd0c3;
+                 color: #927b68;
+                 cursor: default;
+             }
+
+             .page-info {
+                 font-size: 14px;
+                 font-weight: bold;
+                 color: #4b2e1e;
+             }
 
         </style>
 
@@ -873,70 +973,41 @@
 
             <div class="sidebar">
 
-
                 <div class="sidebar-title">
-
                     Admin Menu
-
                 </div>
-
-
 
                 <a class="menu-item"
                    href="${pageContext.request.contextPath}/admin-dashboard">
-
                     Dashboard
-
                 </a>
-
-
 
                 <a class="menu-item"
-                   href="${pageContext.request.contextPath}/staff">
-
+                   href="${pageContext.request.contextPath}/admin-staff">
                     Staff Management
-
                 </a>
-
-
 
                 <a class="menu-item active"
-                   href="${pageContext.request.contextPath}/menu">
-
-                    Menu Management
-
-                </a>
-
-
+                    href="${pageContext.request.contextPath}/menu">
+                     Menu Management
+                 </a>
 
                 <a class="menu-item"
-                   href="${pageContext.request.contextPath}/order">
-
+                   href="${pageContext.request.contextPath}/admin-order">
                     Order Management
-
                 </a>
-
-
 
                 <a class="menu-item"
                    href="${pageContext.request.contextPath}/order-history">
-
                     Order History
-
                 </a>
-
-
 
                 <a class="menu-item"
                    href="${pageContext.request.contextPath}/report">
-
                     Order Summary & Report
-
                 </a>
 
-
             </div>
-
 
 
 
@@ -1049,6 +1120,46 @@
                         existing menu items.
 
                     </p>
+                    
+                    <form action="${pageContext.request.contextPath}/menu"
+                            method="get"
+                            class="category-filter">
+
+                          <label for="category">
+                              Filter by Category:
+                          </label>
+
+                          <select name="category"
+                                  id="category"
+                                  onchange="this.form.submit()">
+
+                              <option value="All"
+                                      <%= "All".equalsIgnoreCase(selectedCategory)
+                                              ? "selected" : ""%>>
+                                  All Categories
+                              </option>
+
+                              <option value="Coffee"
+                                      <%= "Coffee".equalsIgnoreCase(selectedCategory)
+                                              ? "selected" : ""%>>
+                                  Coffee
+                              </option>
+
+                              <option value="Non-Coffee"
+                                      <%= "Non-Coffee".equalsIgnoreCase(selectedCategory)
+                                              ? "selected" : ""%>>
+                                  Non-Coffee
+                              </option>
+
+                              <option value="Dessert"
+                                      <%= "Dessert".equalsIgnoreCase(selectedCategory)
+                                              ? "selected" : ""%>>
+                                  Dessert
+                              </option>
+
+                          </select>
+
+                      </form>
 
 
 
@@ -1261,6 +1372,90 @@
 
 
                     </table>
+                            
+                            <div class="pagination">
+
+                                <!-- =========================
+                                     PREVIOUS BUTTON
+                                     ========================= -->
+
+                                <% if (currentPage > 1) { %>
+
+                                    <% if (searchMode) { %>
+
+                                        <a class="page-btn"
+                                           href="${pageContext.request.contextPath}/menu?action=search&keyword=<%= searchKeyword %>&page=<%= currentPage - 1 %>">
+
+                                            &laquo; Previous
+
+                                        </a>
+
+                                    <% } else { %>
+
+                                        <a class="page-btn"
+                                           href="${pageContext.request.contextPath}/menu?category=<%= selectedCategory %>&page=<%= currentPage - 1 %>">
+
+                                            &laquo; Previous
+
+                                        </a>
+
+                                    <% } %>
+
+                                <% } else { %>
+
+                                    <span class="page-btn disabled">
+                                        &laquo; Previous
+                                    </span>
+
+                                <% } %>
+
+
+                                <!-- =========================
+                                     PAGE NUMBER
+                                     ========================= -->
+
+                                <span class="page-info">
+
+                                    Page <%= currentPage %> of <%= totalPages %>
+
+                                </span>
+
+
+                                <!-- =========================
+                                     NEXT BUTTON
+                                     ========================= -->
+
+                                <% if (currentPage < totalPages) { %>
+
+                                    <% if (searchMode) { %>
+
+                                        <a class="page-btn"
+                                           href="${pageContext.request.contextPath}/menu?action=search&keyword=<%= searchKeyword %>&page=<%= currentPage + 1 %>">
+
+                                            Next &raquo;
+
+                                        </a>
+
+                                    <% } else { %>
+
+                                        <a class="page-btn"
+                                           href="${pageContext.request.contextPath}/menu?category=<%= selectedCategory %>&page=<%= currentPage + 1 %>">
+
+                                            Next &raquo;
+
+                                        </a>
+
+                                    <% } %>
+
+                                <% } else { %>
+
+                                    <span class="page-btn disabled">
+                                        Next &raquo;
+                                    </span>
+
+                                <% } %>
+
+                            </div>
 
 
                 </div>

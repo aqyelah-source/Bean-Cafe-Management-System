@@ -615,6 +615,55 @@
                         190px;
                 }
             }
+            
+            /* =========================
+                PASSWORD SHOW / HIDE
+                ========================= */
+
+             .password-wrapper {
+                 position: relative;
+                 width: 100%;
+             }
+
+             .password-wrapper input {
+                 width: 100%;
+                 padding-right: 50px;
+             }
+
+             .password-toggle {
+                 position: absolute;
+                 right: 14px;
+                 top: 50%;
+                 transform: translateY(-50%);
+
+                 border: none;
+                 background: transparent;
+                 padding: 0;
+
+                 font-size: 18px;
+                 cursor: pointer;
+             }
+
+             .password-toggle:hover {
+                 opacity: 0.7;
+             }
+             
+             .field-guide {
+                display: block;
+                margin-top: 6px;
+                color: #7a573e;
+                font-size: 12px;
+                line-height: 1.4;
+            }
+            
+            .btn-reset {
+                background: #7a573e;
+                color: white;
+            }
+
+            .btn-reset:hover {
+                background: #5f402d;
+            }
 
         </style>
 
@@ -686,61 +735,39 @@
 
             <div class="sidebar">
 
-
                 <div class="sidebar-title">
-
                     Admin Menu
-
                 </div>
-
 
                 <a class="menu-item"
                    href="${pageContext.request.contextPath}/admin-dashboard">
-
                     Dashboard
-
                 </a>
-
 
                 <a class="menu-item active"
-                   href="${pageContext.request.contextPath}/staff">
-
-                    Staff Management
-
-                </a>
-
+                    href="${pageContext.request.contextPath}/admin-staff">
+                     Staff Management
+                 </a>
 
                 <a class="menu-item"
                    href="${pageContext.request.contextPath}/menu">
-
                     Menu Management
-
                 </a>
-
 
                 <a class="menu-item"
-                   href="${pageContext.request.contextPath}/order">
-
+                   href="${pageContext.request.contextPath}/admin-order">
                     Order Management
-
                 </a>
-
 
                 <a class="menu-item"
                    href="${pageContext.request.contextPath}/order-history">
-
                     Order History
-
                 </a>
-
 
                 <a class="menu-item"
                    href="${pageContext.request.contextPath}/report">
-
                     Order Summary & Report
-
                 </a>
-
 
             </div>
 
@@ -868,8 +895,8 @@
                          STAFF FORM
                          ========================= -->
 
-                    <form action="${pageContext.request.contextPath}/staff"
-                          method="post">
+                    <form action="${pageContext.request.contextPath}/admin-staff"
+                         method="post">
 
 
                         <!-- INSERT / UPDATE -->
@@ -907,61 +934,55 @@
 
 
                         <!-- =========================
-                             NAME + USERNAME
-                             ========================= -->
+                        NAME + USERNAME
+                        ========================= -->
 
-                        <div class="form-row">
+                   <div class="form-row">
 
+                       <!-- STAFF NAME -->
+                       <div class="form-group">
 
-                            <div class="form-group">
+                           <label for="name">
+                               Staff Name
+                           </label>
 
+                           <input type="text"
+                                  id="name"
+                                  name="name"
+                                  placeholder="Enter staff name"
+                                  value="<%= isEdit
+                                          ? staff.getName()
+                                          : ""%>"
+                                  required>
 
-                                <label for="name">
-
-                                    Staff Name
-
-                                </label>
-
-
-                                <input type="text"
-                                       id="name"
-                                       name="name"
-                                       placeholder="Enter staff name"
-                                       value="<%= isEdit
-                                               ? staff.getName()
-                                               : ""%>"
-                                       required>
+                       </div>
 
 
-                            </div>
+                       <!-- USERNAME -->
+                       <div class="form-group">
 
+                           <label for="username">
+                               Username
+                           </label>
 
+                           <input type="text"
+                                  id="username"
+                                  name="username"
+                                  placeholder="e.g. staff01"
+                                  value="<%= isEdit
+                                          ? staff.getUsername()
+                                          : ""%>"
+                                  pattern="(?=.*[A-Za-z])(?=.*[0-9])[A-Za-z0-9]{5,}"
+                                  title="Username must be at least 5 characters and contain both letters and numbers."
+                                  required>
 
-                            <div class="form-group">
+                           <small class="field-guide">
+                               At least 5 characters with letters and numbers
+                           </small>
 
+                       </div>
 
-                                <label for="username">
-
-                                    Username
-
-                                </label>
-
-
-                                <input type="text"
-                                       id="username"
-                                       name="username"
-                                       placeholder="Enter username"
-                                       value="<%= isEdit
-                                               ? staff.getUsername()
-                                               : ""%>"
-                                       required>
-
-
-                            </div>
-
-
-                        </div>
-
+                   </div>
 
 
                         <!-- =========================
@@ -979,20 +1000,35 @@
 
                             <div class="form-group full">
 
-
                                 <label for="password">
-
                                     Password
-
                                 </label>
 
+                                <div class="password-wrapper">
 
-                                <input type="password"
-                                       id="password"
-                                       name="password"
-                                       placeholder="Enter password"
-                                       required>
+                                    <input type="password"
+                                    id="password"
+                                    name="password"
+                                    placeholder="e.g. bean1234"
+                                    autocomplete="new-password"
+                                    pattern="(?=.*[A-Za-z])(?=.*[0-9]).{8,}"
+                                    title="Password must be at least 8 characters and contain both letters and numbers."
+                                    required>
 
+                                    <button type="button"
+                                            class="password-toggle"
+                                            onclick="togglePassword()"
+                                            aria-label="Show or hide password">
+
+                                        <span id="eyeIcon">👁</span>
+
+                                    </button>
+
+                                </div>
+                                
+                                <small class="field-guide">
+                                    At least 8 characters with letters and numbers.
+                                </small>
 
                             </div>
 
@@ -1148,21 +1184,26 @@
                             <button type="submit"
                                     class="btn btn-save">
 
-
                                 <%= isEdit
                                         ? "Update Staff"
                                         : "Add Staff"%>
 
-
                             </button>
 
 
+                            <% if (isEdit) { %>
+
+                            <a class="btn btn-reset"
+                               href="${pageContext.request.contextPath}/admin-staff?action=reset-password&id=<%= staff.getStaffId()%>">
+                                Reset Password
+                            </a>
+
+                            <% } %>
+
 
                             <a class="btn btn-cancel"
-                               href="${pageContext.request.contextPath}/staff">
-
+                               href="${pageContext.request.contextPath}/admin-staff">
                                 Cancel
-
                             </a>
 
 
@@ -1179,7 +1220,29 @@
 
 
         </div>
+                               
+        <script>
+            function togglePassword() {
 
+                const password =
+                        document.getElementById("password");
+
+                const eyeIcon =
+                        document.getElementById("eyeIcon");
+
+                if (password.type === "password") {
+
+                    password.type = "text";
+                    eyeIcon.textContent = "🙈";
+
+                } else {
+
+                    password.type = "password";
+                    eyeIcon.textContent = "👁";
+                }
+            }
+        </script>                       
+                               
 
     </body>
 

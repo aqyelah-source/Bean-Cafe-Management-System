@@ -20,6 +20,23 @@
     List<Order> orderList
             = (List<Order>) request.getAttribute(
                     "orderList");
+    
+        Integer currentPageObj
+            = (Integer) request.getAttribute(
+                    "currentPage");
+
+    Integer totalPagesObj
+            = (Integer) request.getAttribute(
+                    "totalPages");
+
+    int currentPage
+            = currentPageObj != null
+            ? currentPageObj : 1;
+
+    int totalPages
+            = totalPagesObj != null
+            ? totalPagesObj : 1;
+                    
 %>
 
 
@@ -597,6 +614,44 @@
                         190px;
                 }
             }
+            
+            /* =========================
+                PAGINATION
+                ========================= */
+
+             .pagination {
+                 display: flex;
+                 justify-content: center;
+                 align-items: center;
+                 gap: 14px;
+                 margin-top: 22px;
+             }
+
+             .page-btn {
+                 padding: 9px 16px;
+                 background: #4b2e1e;
+                 color: white;
+                 text-decoration: none;
+                 border-radius: 8px;
+                 font-size: 14px;
+                 font-weight: bold;
+             }
+
+             .page-btn:hover {
+                 background: #6f4e37;
+             }
+
+             .page-btn.disabled {
+                 background: #ddd0c3;
+                 color: #927b68;
+                 cursor: default;
+             }
+
+             .page-info {
+                 font-size: 14px;
+                 font-weight: bold;
+                 color: #4b2e1e;
+             }
 
         </style>
 
@@ -671,65 +726,41 @@
 
             <div class="sidebar">
 
-
                 <div class="sidebar-title">
-
                     Admin Menu
-
                 </div>
-
 
                 <a class="menu-item"
                    href="${pageContext.request.contextPath}/admin-dashboard">
-
                     Dashboard
-
                 </a>
-
 
                 <a class="menu-item"
-                   href="${pageContext.request.contextPath}/staff">
-
+                   href="${pageContext.request.contextPath}/admin-staff">
                     Staff Management
-
                 </a>
-
 
                 <a class="menu-item"
                    href="${pageContext.request.contextPath}/menu">
-
                     Menu Management
-
                 </a>
-
 
                 <a class="menu-item active"
-                   href="${pageContext.request.contextPath}/order">
-
+                   href="${pageContext.request.contextPath}/admin-order">
                     Order Management
-
                 </a>
-
 
                 <a class="menu-item"
                    href="${pageContext.request.contextPath}/order-history">
-
                     Order History
-
                 </a>
-
 
                 <a class="menu-item"
                    href="${pageContext.request.contextPath}/report">
-
                     Order Summary & Report
-
                 </a>
 
-
             </div>
-
-
 
 
             <!-- =========================
@@ -945,11 +976,9 @@
 
 
                                     <a class="btn-view"
-                                       href="${pageContext.request.contextPath}/order?action=view&id=<%= order.getOrderId()%>">
-
-                                        View Details
-
-                                    </a>
+                                        href="${pageContext.request.contextPath}/admin-order?action=view&id=<%= order.getOrderId()%>">
+                                         View Details
+                                     </a>
 
 
                                 </td>
@@ -988,6 +1017,57 @@
 
 
                     </table>
+                            
+                            <div class="pagination">
+
+                            <% if (currentPage > 1) { %>
+
+                                <a class="page-btn"
+                                   href="${pageContext.request.contextPath}/admin-order?page=<%= currentPage - 1 %>">
+
+                                    &laquo; Previous
+
+                                </a>
+
+                            <% } else { %>
+
+                                <span class="page-btn disabled">
+
+                                    &laquo; Previous
+
+                                </span>
+
+                            <% } %>
+
+
+                            <span class="page-info">
+
+                                Page <%= currentPage %>
+                                of <%= totalPages %>
+
+                            </span>
+
+
+                            <% if (currentPage < totalPages) { %>
+
+                                <a class="page-btn"
+                                   href="${pageContext.request.contextPath}/admin-order?page=<%= currentPage + 1 %>">
+
+                                    Next &raquo;
+
+                                </a>
+
+                            <% } else { %>
+
+                                <span class="page-btn disabled">
+
+                                    Next &raquo;
+
+                                </span>
+
+                            <% } %>
+
+                        </div>
 
 
                 </div>

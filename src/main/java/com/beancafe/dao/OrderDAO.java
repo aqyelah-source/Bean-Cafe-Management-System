@@ -155,6 +155,103 @@ public class OrderDAO implements OrderDAOInterface {
 
         return orderList;
     }
+    
+    // ==========================================
+    // ADMIN - Get orders with pagination
+    // Latest order first
+    // ==========================================
+    public List<Order> getOrdersByPage(
+            int page,
+            int recordsPerPage) {
+
+        List<Order> orderList = new ArrayList<>();
+
+        int offset =
+                (page - 1) * recordsPerPage;
+
+        String sql =
+                "SELECT * FROM orders "
+                + "ORDER BY order_id DESC "
+                + "LIMIT ? OFFSET ?";
+
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setInt(1, recordsPerPage);
+            stmt.setInt(2, offset);
+
+            try (ResultSet rs = stmt.executeQuery()) {
+
+                while (rs.next()) {
+
+                    Order order = new Order();
+
+                    order.setOrderId(
+                            rs.getInt("order_id")
+                    );
+
+                    order.setStaffId(
+                            rs.getInt("staff_id")
+                    );
+
+                    Timestamp timestamp =
+                            rs.getTimestamp("order_date");
+
+                    if (timestamp != null) {
+
+                        order.setOrderDate(
+                                timestamp.toLocalDateTime()
+                        );
+                    }
+
+                    order.setTotalPrice(
+                            rs.getDouble("total_price")
+                    );
+
+                    order.setStatus(
+                            rs.getString("status")
+                    );
+
+                    orderList.add(order);
+                }
+            }
+
+        } catch (SQLException e) {
+
+            e.printStackTrace();
+        }
+
+        return orderList;
+    }
+
+
+    // ==========================================
+    // ADMIN - Count total orders
+    // ==========================================
+    public int getOrderCount() {
+
+        int totalRecords = 0;
+
+        String sql =
+                "SELECT COUNT(*) FROM orders";
+
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql);
+             ResultSet rs = stmt.executeQuery()) {
+
+            if (rs.next()) {
+
+                totalRecords =
+                        rs.getInt(1);
+            }
+
+        } catch (SQLException e) {
+
+            e.printStackTrace();
+        }
+
+        return totalRecords;
+    }
 
 
     // READ - Search order by order ID

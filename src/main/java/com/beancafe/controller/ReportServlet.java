@@ -16,6 +16,7 @@ import java.io.IOException;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
+import java.util.ArrayList;
 
 @WebServlet("/report")
 public class ReportServlet extends HttpServlet {
@@ -27,14 +28,23 @@ public class ReportServlet extends HttpServlet {
         reportDAO = new ReportDAO();
     }
 
+
+    // ==========================================
+    // DEFAULT REPORT
+    // Automatically display current year
+    // ==========================================
     @Override
-    protected void doGet(HttpServletRequest request,
+    protected void doGet(
+            HttpServletRequest request,
             HttpServletResponse response)
             throws ServletException, IOException {
 
-        HttpSession session
-                = request.getSession(false);
+        HttpSession session =
+                request.getSession(false);
 
+        // =========================
+        // ADMIN SECURITY CHECK
+        // =========================
         if (session == null
                 || session.getAttribute("role") == null
                 || !"Admin".equalsIgnoreCase(
@@ -47,39 +57,137 @@ public class ReportServlet extends HttpServlet {
             return;
         }
 
-        // Default filter
-        int currentYear
-                = LocalDate.now().getYear();
 
-        Map<Integer, Double> salesByMonth
-                = reportDAO.getMonthlySalesByYear(
-                        currentYear);
+        // =========================
+        // DEFAULT FILTER
+        // =========================
+        int currentYear =
+                LocalDate.now().getYear();
+
+        int month = 0; // All Months
+        int year = currentYear;
+
+
+        // =========================
+        // GET ADMIN ID
+        // =========================
+        int userId =
+                (Integer) session.getAttribute(
+                        "userId");
+
+        AdminDAO adminDAO =
+                new AdminDAO();
+
+        int adminId =
+                adminDAO.getAdminIdByUserId(
+                        userId);
+        
+        
+
+
+        // =========================
+        // REPORT SUMMARY
+        // =========================
+        Report generatedReport =
+                reportDAO.generateMonthlyReport(
+                        adminId,
+                        month,
+                        year);
+
+
+        // =========================
+        // ORDER SUMMARY
+        // Latest -> Oldest
+        // =========================
+        List<Order> orderList =
+                reportDAO.getOrdersForReport(
+                        month,
+                        year);
+        
+        int recordsPerPage = 5;
+        int currentPage = 1;
+
+        int totalRecords =
+                orderList.size();
+
+        int totalPages =
+                (int) Math.ceil(
+                        (double) totalRecords
+                        / recordsPerPage);
+
+        List<Order> paginatedOrders =
+                paginateOrders(
+                        orderList,
+                        currentPage,
+                        recordsPerPage);
+        
+        
+
+
+        // =========================
+        // SALES GRAPH
+        // =========================
+        Map<Integer, Double> salesByMonth =
+                reportDAO.getMonthlySalesByYear(
+                        year);
+
+
+        // =========================
+        // SEND DATA TO JSP
+        // =========================
+        request.setAttribute(
+                "generatedReport",
+                generatedReport);
 
         request.setAttribute(
-                "selectedMonth",
-                0);
+        "orderList",
+        paginatedOrders);
 
         request.setAttribute(
-                "selectedYear",
-                currentYear);
+                "currentPage",
+                currentPage);
+
+        request.setAttribute(
+                "totalPages",
+                totalPages);
 
         request.setAttribute(
                 "salesByMonth",
                 salesByMonth);
 
+        request.setAttribute(
+                "selectedMonth",
+                month);
+
+        request.setAttribute(
+                "selectedYear",
+                year);
+
+
         request.getRequestDispatcher(
                 "/report.jsp")
-                .forward(request, response);
+                .forward(
+                        request,
+                        response);
     }
 
+
+    // ==========================================
+    // POST - GENERATE REPORT
+    // ==========================================
     @Override
-    protected void doPost(HttpServletRequest request,
+    protected void doPost(
+            HttpServletRequest request,
             HttpServletResponse response)
             throws ServletException, IOException {
 
-        HttpSession session
-                = request.getSession(false);
+        HttpSession session =
+                request.getSession(false);
 
+
+        // =========================
+        // ADMIN SECURITY CHECK
+        // =========================
         if (session == null
                 || session.getAttribute("role") == null
                 || !"Admin".equalsIgnoreCase(
@@ -92,8 +200,11 @@ public class ReportServlet extends HttpServlet {
             return;
         }
 
-        String action
-                = request.getParameter("action");
+
+        String action =
+                request.getParameter(
+                        "action");
+
 
         if ("generate".equals(action)) {
 
@@ -108,10 +219,44 @@ public class ReportServlet extends HttpServlet {
                     + "/report");
         }
     }
+    
+    // ==========================================
+    // ORDER PAGINATION
+    // ==========================================
+    private List<Order> paginateOrders(
+            List<Order> orderList,
+            int currentPage,
+            int recordsPerPage) {
 
-    // =========================
-    // GENERATE REPORT
-    // =========================
+        if (orderList == null
+                || orderList.isEmpty()) {
+
+            return new ArrayList<>();
+        }
+
+        int start =
+                (currentPage - 1)
+                * recordsPerPage;
+
+        if (start >= orderList.size()) {
+            start = 0;
+        }
+
+        int end =
+                Math.min(
+                        start + recordsPerPage,
+                        orderList.size());
+
+        return new ArrayList<>(
+                orderList.subList(
+                        start,
+                        end));
+    }
+
+
+    // ==========================================
+    // GENERATE REPORT BASED ON FILTER
+    // ==========================================
     private void generateReport(
             HttpServletRequest request,
             HttpServletResponse response)
@@ -119,55 +264,129 @@ public class ReportServlet extends HttpServlet {
 
         try {
 
-            int month
-                    = Integer.parseInt(
+            // =========================
+            // GET FILTER
+            // =========================
+            int month =
+                    Integer.parseInt(
                             request.getParameter(
                                     "month"));
 
-            int year
-                    = Integer.parseInt(
+            int year =
+                    Integer.parseInt(
                             request.getParameter(
                                     "year"));
 
-            HttpSession session
-                    = request.getSession(false);
 
-            int userId
-                    = (Integer) session.getAttribute(
+            // =========================
+            // GET ADMIN ID
+            // =========================
+            HttpSession session =
+                    request.getSession(false);
+
+            int userId =
+                    (Integer) session.getAttribute(
                             "userId");
 
-            AdminDAO adminDAO
-                    = new AdminDAO();
+            AdminDAO adminDAO =
+                    new AdminDAO();
 
-            int adminId
-                    = adminDAO.getAdminIdByUserId(
+            int adminId =
+                    adminDAO.getAdminIdByUserId(
                             userId);
 
-            // Summary
-            Report generatedReport
-                    = reportDAO.generateMonthlyReport(
+
+            // =========================
+            // REPORT SUMMARY
+            // =========================
+            Report generatedReport =
+                    reportDAO.generateMonthlyReport(
                             adminId,
                             month,
                             year);
 
-            // Orders based on filter
-            List<Order> orderList
-                    = reportDAO.getOrdersForReport(
+
+            // =========================
+            // ORDERS BASED ON FILTER
+            // =========================
+            List<Order> orderList =
+                    reportDAO.getOrdersForReport(
                             month,
                             year);
+            
+            // =========================
+            // PAGINATION
+            // =========================
+            int recordsPerPage = 5;
+            int currentPage = 1;
 
-            // Graph for whole selected year
-            Map<Integer, Double> salesByMonth
-                    = reportDAO.getMonthlySalesByYear(
+            String pageParam =
+                    request.getParameter("page");
+
+            if (pageParam != null) {
+
+                try {
+                    currentPage =
+                            Integer.parseInt(pageParam);
+
+                } catch (NumberFormatException e) {
+                    currentPage = 1;
+                }
+            }
+
+            int totalRecords =
+                    orderList.size();
+
+            int totalPages =
+                    (int) Math.ceil(
+                            (double) totalRecords
+                            / recordsPerPage);
+
+            if (currentPage < 1) {
+                currentPage = 1;
+            }
+
+            if (totalPages > 0
+                    && currentPage > totalPages) {
+
+                currentPage = totalPages;
+            }
+
+            List<Order> paginatedOrders =
+                    paginateOrders(
+                            orderList,
+                            currentPage,
+                            recordsPerPage);
+
+
+            // =========================
+            // SALES DATA
+            // JSP decides whether to show
+            // all months or selected month
+            // =========================
+            Map<Integer, Double> salesByMonth =
+                    reportDAO.getMonthlySalesByYear(
                             year);
 
+
+            // =========================
+            // SEND DATA TO JSP
+            // =========================
             request.setAttribute(
                     "generatedReport",
                     generatedReport);
 
             request.setAttribute(
                     "orderList",
-                    orderList);
+                    paginatedOrders);
+
+            request.setAttribute(
+                    "currentPage",
+                    currentPage);
+
+            request.setAttribute(
+                    "totalPages",
+                    totalPages);
 
             request.setAttribute(
                     "salesByMonth",
@@ -181,9 +400,13 @@ public class ReportServlet extends HttpServlet {
                     "selectedYear",
                     year);
 
+
             request.getRequestDispatcher(
                     "/report.jsp")
-                    .forward(request, response);
+                    .forward(
+                            request,
+                            response);
+
 
         } catch (NumberFormatException e) {
 

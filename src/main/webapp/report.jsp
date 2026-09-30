@@ -38,6 +38,22 @@
     Integer selectedYear
             = (Integer) request.getAttribute(
                     "selectedYear");
+    
+    Integer currentPage =
+            (Integer) request.getAttribute(
+                    "currentPage");
+
+    Integer totalPages =
+            (Integer) request.getAttribute(
+                    "totalPages");
+
+    if (currentPage == null) {
+        currentPage = 1;
+    }
+
+    if (totalPages == null) {
+        totalPages = 1;
+    }
 
     String[] monthNames = {
         "",
@@ -1009,73 +1025,43 @@
                  ADMIN SIDEBAR
                  ========================= -->
 
-            <div class="sidebar">
-
+           <div class="sidebar">
 
                 <div class="sidebar-title">
-
                     Admin Menu
-
                 </div>
-
-
 
                 <a class="menu-item"
                    href="${pageContext.request.contextPath}/admin-dashboard">
-
                     Dashboard
-
                 </a>
-
-
 
                 <a class="menu-item"
-                   href="${pageContext.request.contextPath}/staff">
-
+                   href="${pageContext.request.contextPath}/admin-staff">
                     Staff Management
-
                 </a>
-
-
 
                 <a class="menu-item"
                    href="${pageContext.request.contextPath}/menu">
-
                     Menu Management
-
                 </a>
-
-
 
                 <a class="menu-item"
-                   href="${pageContext.request.contextPath}/order">
-
+                   href="${pageContext.request.contextPath}/admin-order">
                     Order Management
-
                 </a>
-
-
 
                 <a class="menu-item"
                    href="${pageContext.request.contextPath}/order-history">
-
                     Order History
-
                 </a>
-
-
 
                 <a class="menu-item active"
-                   href="${pageContext.request.contextPath}/report">
-
-                    Order Summary & Report
-
-                </a>
-
+                    href="${pageContext.request.contextPath}/report">
+                     Order Summary & Report
+                 </a>
 
             </div>
-
-
 
             <!-- =========================
                  REPORT CONTENT
@@ -1308,20 +1294,25 @@
 
                     <h2>
 
-                        Monthly Sales Trend
-
                         <%
-                            if (selectedYear != null) {
+                            if (selectedMonth != null
+                                    && selectedMonth != 0) {
                         %>
 
+                            Sales Trend -
+                            <%= monthNames[selectedMonth]%>
+                            <%= selectedYear%>
 
-                        - <%= selectedYear%>
+                        <%
+                            } else {
+                        %>
 
+                            Monthly Sales Trend -
+                            <%= selectedYear%>
 
                         <%
                             }
                         %>
-
 
                     </h2>
 
@@ -1338,13 +1329,24 @@
 
                     <div class="graph">
 
+                    <%
+                        int startMonth = 1;
+                        int endMonth = 12;
 
-                        <%
-                            for (int month = 1;
-                                    month <= 12;
-                                    month++) {
+                        // If a specific month is selected,
+                        // show only that month
+                        if (selectedMonth != null
+                                && selectedMonth != 0) {
 
-                                double sales = 0;
+                            startMonth = selectedMonth;
+                            endMonth = selectedMonth;
+                        }
+
+                        for (int month = startMonth;
+                                month <= endMonth;
+                                month++) {
+
+                            double sales = 0;
 
                                 if (salesByMonth != null
                                         && salesByMonth.get(month)
@@ -1655,6 +1657,105 @@
 
 
                     </table>
+                            
+                            <%
+                                if (totalPages > 1) {
+                            %>
+
+                            <div style="
+                                 display: flex;
+                                 justify-content: center;
+                                 align-items: center;
+                                 gap: 15px;
+                                 margin-top: 22px;">
+
+
+                                <!-- PREVIOUS -->
+
+                                <% if (currentPage > 1) { %>
+
+                                <form action="${pageContext.request.contextPath}/report"
+                                      method="post"
+                                      style="margin: 0;">
+
+                                    <input type="hidden"
+                                           name="action"
+                                           value="generate">
+
+                                    <input type="hidden"
+                                           name="month"
+                                           value="<%= selectedMonth%>">
+
+                                    <input type="hidden"
+                                           name="year"
+                                           value="<%= selectedYear%>">
+
+                                    <input type="hidden"
+                                           name="page"
+                                           value="<%= currentPage - 1%>">
+
+                                    <button type="submit"
+                                            class="btn btn-generate">
+
+                                        Previous
+
+                                    </button>
+
+                                </form>
+
+                                <% } %>
+
+
+                                <!-- PAGE NUMBER -->
+
+                                <strong style="color:#4b2e1e;">
+
+                                    Page <%= currentPage%>
+                                    of <%= totalPages%>
+
+                                </strong>
+
+
+                                <!-- NEXT -->
+
+                                <% if (currentPage < totalPages) { %>
+
+                                <form action="${pageContext.request.contextPath}/report"
+                                      method="post"
+                                      style="margin: 0;">
+
+                                    <input type="hidden"
+                                           name="action"
+                                           value="generate">
+
+                                    <input type="hidden"
+                                           name="month"
+                                           value="<%= selectedMonth%>">
+
+                                    <input type="hidden"
+                                           name="year"
+                                           value="<%= selectedYear%>">
+
+                                    <input type="hidden"
+                                           name="page"
+                                           value="<%= currentPage + 1%>">
+
+                                    <button type="submit"
+                                            class="btn btn-generate">
+
+                                        Next
+
+                                    </button>
+
+                                </form>
+
+                                <% } %>
+
+                            </div>
+
+                            <%
+                                }
+                            %>
 
 
                 </div>

@@ -2,7 +2,6 @@ package com.beancafe.controller;
 
 import com.beancafe.dao.AdminDAO;
 import com.beancafe.dao.StaffDAO;
-
 import com.beancafe.model.Staff;
 
 import jakarta.servlet.ServletException;
@@ -15,16 +14,16 @@ import jakarta.servlet.http.HttpSession;
 import java.io.IOException;
 import java.util.List;
 
-@WebServlet("/staff")
+@WebServlet("/admin-staff")
 public class StaffServlet extends HttpServlet {
 
     private StaffDAO staffDAO;
 
     @Override
     public void init() {
-
         staffDAO = new StaffDAO();
     }
+
 
     // ==========================================
     // HANDLE GET REQUESTS
@@ -35,8 +34,7 @@ public class StaffServlet extends HttpServlet {
             HttpServletResponse response)
             throws ServletException, IOException {
 
-        HttpSession session
-                = request.getSession(false);
+        HttpSession session = request.getSession(false);
 
         // ==========================================
         // ADMIN ONLY
@@ -54,11 +52,9 @@ public class StaffServlet extends HttpServlet {
             return;
         }
 
-        String action
-                = request.getParameter("action");
+        String action = request.getParameter("action");
 
         if (action == null) {
-
             action = "list";
         }
 
@@ -76,6 +72,7 @@ public class StaffServlet extends HttpServlet {
 
                 break;
 
+
             // ==================================
             // SHOW EDIT STAFF FORM
             // ==================================
@@ -87,6 +84,19 @@ public class StaffServlet extends HttpServlet {
                 );
 
                 break;
+                
+            // ==================================
+            // SHOW RESET PASSWORD FORM
+            // ==================================
+            case "reset-password":
+
+                showResetPasswordForm(
+                        request,
+                        response
+                );
+
+                break;
+
 
             // ==================================
             // SEARCH STAFF
@@ -100,6 +110,7 @@ public class StaffServlet extends HttpServlet {
 
                 break;
 
+
             // ==================================
             // DELETE STAFF
             // ==================================
@@ -111,6 +122,7 @@ public class StaffServlet extends HttpServlet {
                 );
 
                 break;
+
 
             // ==================================
             // DISPLAY ALL STAFF
@@ -128,6 +140,7 @@ public class StaffServlet extends HttpServlet {
         }
     }
 
+
     // ==========================================
     // HANDLE POST REQUESTS
     // ==========================================
@@ -137,8 +150,7 @@ public class StaffServlet extends HttpServlet {
             HttpServletResponse response)
             throws ServletException, IOException {
 
-        HttpSession session
-                = request.getSession(false);
+        HttpSession session = request.getSession(false);
 
         // ==========================================
         // ADMIN ONLY
@@ -156,14 +168,13 @@ public class StaffServlet extends HttpServlet {
             return;
         }
 
-        String action
-                = request.getParameter("action");
+        String action = request.getParameter("action");
 
         if (action == null) {
 
             response.sendRedirect(
                     request.getContextPath()
-                    + "/staff"
+                    + "/admin-staff"
             );
 
             return;
@@ -183,6 +194,7 @@ public class StaffServlet extends HttpServlet {
 
                 break;
 
+
             // ==================================
             // UPDATE STAFF
             // ==================================
@@ -194,6 +206,19 @@ public class StaffServlet extends HttpServlet {
                 );
 
                 break;
+                
+            // ==================================
+            // RESET STAFF PASSWORD
+            // ==================================
+            case "reset-password":
+
+                resetPassword(
+                        request,
+                        response
+                );
+
+                break;
+
 
             // ==================================
             // DEFAULT
@@ -202,12 +227,13 @@ public class StaffServlet extends HttpServlet {
 
                 response.sendRedirect(
                         request.getContextPath()
-                        + "/staff"
+                        + "/admin-staff"
                 );
 
                 break;
         }
     }
+
 
     // ==========================================
     // READ - DISPLAY ALL STAFF
@@ -233,6 +259,7 @@ public class StaffServlet extends HttpServlet {
         );
     }
 
+
     // ==========================================
     // SHOW ADD STAFF FORM
     // ==========================================
@@ -248,6 +275,7 @@ public class StaffServlet extends HttpServlet {
                 response
         );
     }
+
 
     // ==========================================
     // SHOW EDIT STAFF FORM
@@ -274,7 +302,7 @@ public class StaffServlet extends HttpServlet {
 
                 response.sendRedirect(
                         request.getContextPath()
-                        + "/staff?error=notfound"
+                        + "/admin-staff?error=notfound"
                 );
 
                 return;
@@ -296,10 +324,60 @@ public class StaffServlet extends HttpServlet {
 
             response.sendRedirect(
                     request.getContextPath()
-                    + "/staff"
+                    + "/admin-staff"
             );
         }
     }
+    
+    // ==========================================
+    // SHOW RESET PASSWORD FORM
+    // ==========================================
+    private void showResetPasswordForm(
+            HttpServletRequest request,
+            HttpServletResponse response)
+            throws ServletException, IOException {
+
+        try {
+
+            int staffId =
+                    Integer.parseInt(
+                            request.getParameter("id")
+                    );
+
+            Staff staff =
+                    staffDAO.getStaffById(staffId);
+
+            if (staff == null) {
+
+                response.sendRedirect(
+                        request.getContextPath()
+                        + "/admin-staff?error=notfound"
+                );
+
+                return;
+            }
+
+            request.setAttribute(
+                    "staff",
+                    staff
+            );
+
+            request.getRequestDispatcher(
+                    "/staff-reset-password.jsp"
+            ).forward(
+                    request,
+                    response
+            );
+
+        } catch (NumberFormatException e) {
+
+            response.sendRedirect(
+                    request.getContextPath()
+                    + "/admin-staff"
+            );
+        }
+    }
+
 
     // ==========================================
     // CREATE - INSERT NEW STAFF
@@ -349,7 +427,7 @@ public class StaffServlet extends HttpServlet {
 
                 response.sendRedirect(
                         request.getContextPath()
-                        + "/staff?action=add"
+                        + "/admin-staff?action=add"
                         + "&error=admin"
                 );
 
@@ -400,7 +478,7 @@ public class StaffServlet extends HttpServlet {
 
                 response.sendRedirect(
                         request.getContextPath()
-                        + "/staff?action=add"
+                        + "/admin-staff?action=add"
                         + "&error=empty"
                 );
 
@@ -454,14 +532,14 @@ public class StaffServlet extends HttpServlet {
 
                 response.sendRedirect(
                         request.getContextPath()
-                        + "/staff?success=added"
+                        + "/admin-staff?success=added"
                 );
 
             } else {
 
                 response.sendRedirect(
                         request.getContextPath()
-                        + "/staff?action=add"
+                        + "/admin-staff?action=add"
                         + "&error=insert"
                 );
             }
@@ -472,11 +550,12 @@ public class StaffServlet extends HttpServlet {
 
             response.sendRedirect(
                     request.getContextPath()
-                    + "/staff?action=add"
+                    + "/admin-staff?action=add"
                     + "&error=insert"
             );
         }
     }
+
 
     // ==========================================
     // UPDATE - UPDATE STAFF
@@ -539,7 +618,7 @@ public class StaffServlet extends HttpServlet {
 
                 response.sendRedirect(
                         request.getContextPath()
-                        + "/staff?action=edit&id="
+                        + "/admin-staff?action=edit&id="
                         + staffId
                         + "&error=empty"
                 );
@@ -559,7 +638,7 @@ public class StaffServlet extends HttpServlet {
 
                 response.sendRedirect(
                         request.getContextPath()
-                        + "/staff?error=notfound"
+                        + "/admin-staff?error=notfound"
                 );
 
                 return;
@@ -604,14 +683,14 @@ public class StaffServlet extends HttpServlet {
 
                 response.sendRedirect(
                         request.getContextPath()
-                        + "/staff?success=updated"
+                        + "/admin-staff?success=updated"
                 );
 
             } else {
 
                 response.sendRedirect(
                         request.getContextPath()
-                        + "/staff?action=edit&id="
+                        + "/admin-staff?action=edit&id="
                         + staffId
                         + "&error=update"
                 );
@@ -621,10 +700,155 @@ public class StaffServlet extends HttpServlet {
 
             response.sendRedirect(
                     request.getContextPath()
-                    + "/staff"
+                    + "/admin-staff"
             );
         }
     }
+    
+    // ==========================================
+// RESET STAFF PASSWORD
+// ==========================================
+private void resetPassword(
+        HttpServletRequest request,
+        HttpServletResponse response)
+        throws IOException {
+
+    try {
+
+        // ==================================
+        // GET FORM DATA
+        // ==================================
+        int staffId =
+                Integer.parseInt(
+                        request.getParameter("staffId")
+                );
+
+        int userId =
+                Integer.parseInt(
+                        request.getParameter("userId")
+                );
+
+        String newPassword =
+                request.getParameter(
+                        "newPassword"
+                );
+
+        String confirmPassword =
+                request.getParameter(
+                        "confirmPassword"
+                );
+
+
+        // ==================================
+        // CHECK EMPTY
+        // ==================================
+        if (newPassword == null
+                || newPassword.trim().isEmpty()
+                || confirmPassword == null
+                || confirmPassword.trim().isEmpty()) {
+
+            response.sendRedirect(
+                    request.getContextPath()
+                    + "/admin-staff?action=reset-password&id="
+                    + staffId
+                    + "&error=empty"
+            );
+
+            return;
+        }
+
+
+        // ==================================
+        // CHECK PASSWORD MATCH
+        // ==================================
+        if (!newPassword.equals(confirmPassword)) {
+
+            response.sendRedirect(
+                    request.getContextPath()
+                    + "/admin-staff?action=reset-password&id="
+                    + staffId
+                    + "&error=mismatch"
+            );
+
+            return;
+        }
+
+
+        // ==================================
+        // PASSWORD VALIDATION
+        // At least 8 characters
+        // Must contain letters + numbers
+        // ==================================
+        if (!newPassword.matches(
+                "^(?=.*[A-Za-z])(?=.*[0-9]).{8,}$")) {
+
+            response.sendRedirect(
+                    request.getContextPath()
+                    + "/admin-staff?action=reset-password&id="
+                    + staffId
+                    + "&error=invalid"
+            );
+
+            return;
+        }
+
+
+        // ==================================
+        // VERIFY STAFF EXISTS
+        // ==================================
+        Staff staff =
+                staffDAO.getStaffById(
+                        staffId
+                );
+
+        if (staff == null
+                || staff.getUserId() != userId) {
+
+            response.sendRedirect(
+                    request.getContextPath()
+                    + "/admin-staff?error=notfound"
+            );
+
+            return;
+        }
+
+
+        // ==================================
+        // RESET PASSWORD
+        // ==================================
+                boolean success =
+                        staffDAO.resetPassword(
+                                userId,
+                                newPassword
+                        );
+
+
+                if (success) {
+
+                    response.sendRedirect(
+                            request.getContextPath()
+                            + "/admin-staff?success=passwordreset"
+                    );
+
+                } else {
+
+                    response.sendRedirect(
+                            request.getContextPath()
+                            + "/admin-staff?action=reset-password&id="
+                            + staffId
+                            + "&error=reset"
+                    );
+                }
+
+
+            } catch (NumberFormatException e) {
+
+                response.sendRedirect(
+                        request.getContextPath()
+                        + "/admin-staff"
+                );
+            }
+        }
 
     // ==========================================
     // DELETE - DELETE STAFF
@@ -655,7 +879,7 @@ public class StaffServlet extends HttpServlet {
 
                 response.sendRedirect(
                         request.getContextPath()
-                        + "/staff?error=notfound"
+                        + "/admin-staff?error=notfound"
                 );
 
                 return;
@@ -674,14 +898,14 @@ public class StaffServlet extends HttpServlet {
 
                 response.sendRedirect(
                         request.getContextPath()
-                        + "/staff?success=deleted"
+                        + "/admin-staff?success=deleted"
                 );
 
             } else {
 
                 response.sendRedirect(
                         request.getContextPath()
-                        + "/staff?error=delete"
+                        + "/admin-staff?error=delete"
                 );
             }
 
@@ -689,10 +913,11 @@ public class StaffServlet extends HttpServlet {
 
             response.sendRedirect(
                     request.getContextPath()
-                    + "/staff"
+                    + "/admin-staff"
             );
         }
     }
+
 
     // ==========================================
     // SEARCH - SEARCH STAFF

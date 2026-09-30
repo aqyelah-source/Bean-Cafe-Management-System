@@ -28,10 +28,17 @@ public class StaffFilter implements Filter {
         HttpServletResponse response = (HttpServletResponse) res;
         HttpSession session = request.getSession(false);
 
-        if (session != null && "Staff".equalsIgnoreCase((String) session.getAttribute("role"))) {
+        if (session != null
+                && "Staff".equalsIgnoreCase(
+                        (String) session.getAttribute("role"))) {
+
             chain.doFilter(req, res);
+
         } else {
-            response.sendRedirect(request.getContextPath() + "/login.jsp");
+
+            response.sendRedirect(
+                    request.getContextPath() + "/login.jsp"
+            );
         }
     }
 }

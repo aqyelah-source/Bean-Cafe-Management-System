@@ -857,60 +857,39 @@
 
             <div class="sidebar">
 
-
                 <div class="sidebar-title">
-
                     Admin Menu
-
                 </div>
-
 
                 <a class="menu-item"
                    href="${pageContext.request.contextPath}/admin-dashboard">
-
                     Dashboard
-
                 </a>
-
 
                 <a class="menu-item active"
-                   href="${pageContext.request.contextPath}/staff">
-
-                    Staff Management
-
-                </a>
-
+                    href="${pageContext.request.contextPath}/admin-staff">
+                     Staff Management
+                 </a>
 
                 <a class="menu-item"
                    href="${pageContext.request.contextPath}/menu">
-
                     Menu Management
-
                 </a>
-
 
                 <a class="menu-item"
-                   href="${pageContext.request.contextPath}/order">
-
+                   href="${pageContext.request.contextPath}/admin-order">
                     Order Management
-
                 </a>
 
-
-                <div class="menu-item disabled">
-
+                <a class="menu-item"
+                   href="${pageContext.request.contextPath}/order-history">
                     Order History
-
-                </div>
-
+                </a>
 
                 <a class="menu-item"
                    href="${pageContext.request.contextPath}/report">
-
                     Order Summary & Report
-
                 </a>
-
 
             </div>
 
@@ -952,11 +931,9 @@
 
 
                     <a class="btn btn-add"
-                       href="${pageContext.request.contextPath}/staff?action=add">
-
-                        + Add Staff
-
-                    </a>
+                        href="${pageContext.request.contextPath}/admin-staff?action=add">
+                         + Add Staff
+                     </a>
 
 
                 </div>
@@ -1051,7 +1028,7 @@
 
 
                     <form class="search-form"
-                          action="${pageContext.request.contextPath}/staff"
+                          action="${pageContext.request.contextPath}/admin-staff"
                           method="get">
 
 
@@ -1075,11 +1052,9 @@
 
 
                         <a class="btn btn-show"
-                           href="${pageContext.request.contextPath}/staff">
-
-                            Show All
-
-                        </a>
+                            href="${pageContext.request.contextPath}/admin-staff">
+                             Show All
+                         </a>
 
 
                     </form>
@@ -1213,18 +1188,16 @@
                                     <!-- EDIT STAFF -->
 
                                     <a class="btn btn-edit"
-                                       href="${pageContext.request.contextPath}/staff?action=edit&id=<%= staff.getStaffId()%>">
-
-                                        Edit
-
-                                    </a>
+                                        href="${pageContext.request.contextPath}/admin-staff?action=edit&id=<%= staff.getStaffId()%>">
+                                         Edit
+                                     </a>
 
 
 
                                     <!-- DELETE STAFF -->
 
                                     <a class="btn btn-delete"
-                                       href="${pageContext.request.contextPath}/staff?action=delete&id=<%= staff.getStaffId()%>"
+                                       href="${pageContext.request.contextPath}/admin-staff?action=delete&id=<%= staff.getStaffId()%>"
                                        onclick="return confirmDelete('<%= staff.getName()%>');">
 
                                         Delete
@@ -1297,3 +1270,4 @@
     </body>
 
 </html>
+

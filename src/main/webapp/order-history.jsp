@@ -732,64 +732,41 @@
 
             <div class="sidebar">
 
-
                 <div class="sidebar-title">
-
                     Admin Menu
-
                 </div>
-
 
                 <a class="menu-item"
                    href="${pageContext.request.contextPath}/admin-dashboard">
-
                     Dashboard
-
                 </a>
-
 
                 <a class="menu-item"
-                   href="${pageContext.request.contextPath}/staff">
-
+                   href="${pageContext.request.contextPath}/admin-staff">
                     Staff Management
-
                 </a>
-
 
                 <a class="menu-item"
                    href="${pageContext.request.contextPath}/menu">
-
                     Menu Management
-
                 </a>
-
 
                 <a class="menu-item"
-                   href="${pageContext.request.contextPath}/order">
-
+                   href="${pageContext.request.contextPath}/admin-order">
                     Order Management
-
                 </a>
-
 
                 <a class="menu-item active"
-                   href="${pageContext.request.contextPath}/order-history">
-
-                    Order History
-
-                </a>
-
+                    href="${pageContext.request.contextPath}/order-history">
+                     Order History
+                 </a>
 
                 <a class="menu-item"
                    href="${pageContext.request.contextPath}/report">
-
                     Order Summary & Report
-
                 </a>
 
-
             </div>
-
 
 
 

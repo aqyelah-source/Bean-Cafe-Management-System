@@ -2,7 +2,6 @@ package com.beancafe.controller;
 
 import com.beancafe.dao.AdminDAO;
 import com.beancafe.dao.MenuDAO;
-import com.beancafe.dao.MenuDAOInterface;
 import com.beancafe.model.Menu;
 
 import jakarta.servlet.ServletException;
@@ -18,7 +17,7 @@ import java.util.List;
 @WebServlet("/menu")
 public class MenuServlet extends HttpServlet {
 
-    private MenuDAOInterface menuDAO;
+    private MenuDAO menuDAO;
 
     @Override
     public void init() {
@@ -66,6 +65,10 @@ public class MenuServlet extends HttpServlet {
 
             case "delete":
                 deleteMenu(request, response);
+                break;
+
+            case "search":
+                searchMenu(request, response);
                 break;
 
             case "list":
@@ -129,18 +132,213 @@ public class MenuServlet extends HttpServlet {
     // =========================
     // READ - DISPLAY ALL MENU
     // =========================
-    private void listMenu(HttpServletRequest request,
-                          HttpServletResponse response)
-            throws ServletException, IOException {
+    // =========================
+// READ - DISPLAY MENU
+// FILTER + PAGINATION
+// =========================
+private void listMenu(HttpServletRequest request,
+                      HttpServletResponse response)
+        throws ServletException, IOException {
 
-        List<Menu> menuList = menuDAO.getAllMenu();
+    // Get selected category
+    String category = request.getParameter("category");
 
-        request.setAttribute("menuList", menuList);
-
-        request.getRequestDispatcher("/menu-list.jsp")
-               .forward(request, response);
+    if (category == null || category.trim().isEmpty()) {
+        category = "All";
     }
 
+
+    // Get current page
+    int currentPage = 1;
+
+    try {
+
+        String pageParam = request.getParameter("page");
+
+        if (pageParam != null) {
+            currentPage = Integer.parseInt(pageParam);
+        }
+
+        if (currentPage < 1) {
+            currentPage = 1;
+        }
+
+    } catch (NumberFormatException e) {
+
+        currentPage = 1;
+    }
+
+
+    // Show 5 menu records per page
+    int recordsPerPage = 5;
+
+
+    // Count total records
+    int totalRecords =
+            menuDAO.getMenuCount(category);
+
+
+    // Calculate total pages
+    int totalPages =
+            (int) Math.ceil(
+                    (double) totalRecords / recordsPerPage
+            );
+
+    if (totalPages < 1) {
+        totalPages = 1;
+    }
+
+
+    // Prevent invalid page number
+    if (currentPage > totalPages) {
+        currentPage = totalPages;
+    }
+
+
+    // Get menu records
+    List<Menu> menuList =
+            menuDAO.getMenuByPage(
+                    category,
+                    currentPage,
+                    recordsPerPage
+            );
+
+
+            // Send data to JSP
+            request.setAttribute(
+                    "menuList",
+                    menuList
+            );
+
+            request.setAttribute(
+                    "selectedCategory",
+                    category
+            );
+
+            request.setAttribute(
+                    "currentPage",
+                    currentPage
+            );
+
+            request.setAttribute(
+                    "totalPages",
+                    totalPages
+            );
+
+            request.setAttribute(
+                    "totalRecords",
+                    totalRecords
+            );
+
+
+            request.getRequestDispatcher(
+                    "/menu-list.jsp"
+            ).forward(
+                    request,
+                    response
+            );
+        }
+        
+        // =========================
+        // SEARCH MENU
+        // =========================
+        private void searchMenu(
+                HttpServletRequest request,
+                HttpServletResponse response)
+                throws ServletException, IOException {
+
+            String keyword = request.getParameter("keyword");
+
+            if (keyword == null) {
+                keyword = "";
+            }
+
+            keyword = keyword.trim();
+
+
+            int currentPage = 1;
+            int recordsPerPage = 5;
+
+            try {
+
+                String pageParam = request.getParameter("page");
+
+                if (pageParam != null) {
+                    currentPage = Integer.parseInt(pageParam);
+                }
+
+                if (currentPage < 1) {
+                    currentPage = 1;
+                }
+
+            } catch (NumberFormatException e) {
+                currentPage = 1;
+            }
+
+
+            int totalRecords =
+                    menuDAO.getSearchMenuCount(keyword);
+
+            int totalPages =
+                    (int) Math.ceil(
+                            (double) totalRecords / recordsPerPage
+                    );
+
+            if (totalPages < 1) {
+                totalPages = 1;
+            }
+
+            if (currentPage > totalPages) {
+                currentPage = totalPages;
+            }
+
+
+            List<Menu> menuList =
+                    menuDAO.searchMenu(
+                            keyword,
+                            currentPage,
+                            recordsPerPage
+                    );
+
+
+            request.setAttribute(
+                    "menuList",
+                    menuList
+            );
+
+            request.setAttribute(
+                    "currentPage",
+                    currentPage
+            );
+
+            request.setAttribute(
+                    "totalPages",
+                    totalPages
+            );
+
+            request.setAttribute(
+                    "totalRecords",
+                    totalRecords
+            );
+
+            request.setAttribute(
+                    "searchMode",
+                    true
+            );
+
+            request.setAttribute(
+                    "searchKeyword",
+                    keyword
+            );
+
+
+            request.getRequestDispatcher(
+                    "/menu-list.jsp"
+            ).forward(
+                    request,
+                    response
+            );
+        }
 
     // =========================
     // SHOW ADD MENU FORM
