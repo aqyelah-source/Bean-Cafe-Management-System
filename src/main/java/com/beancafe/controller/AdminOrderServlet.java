@@ -11,6 +11,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 
 @WebServlet("/admin-order")
@@ -20,9 +21,9 @@ public class AdminOrderServlet extends HttpServlet {
 
     @Override
     public void init() {
+
         orderDAO = new OrderDAO();
     }
-
 
     // ==========================================
     // HANDLE GET REQUEST
@@ -33,7 +34,8 @@ public class AdminOrderServlet extends HttpServlet {
             HttpServletResponse response)
             throws ServletException, IOException {
 
-        HttpSession session = request.getSession(false);
+        HttpSession session
+                = request.getSession(false);
 
         // ==========================================
         // ADMIN ONLY
@@ -51,13 +53,13 @@ public class AdminOrderServlet extends HttpServlet {
             return;
         }
 
-
-        String action = request.getParameter("action");
+        String action
+                = request.getParameter("action");
 
         if (action == null) {
+
             action = "list";
         }
-
 
         switch (action) {
 
@@ -73,9 +75,8 @@ public class AdminOrderServlet extends HttpServlet {
 
                 break;
 
-
             // ==================================
-            // DISPLAY ALL ORDERS
+            // DISPLAY / FILTER / SEARCH ORDERS
             // ==================================
             case "list":
 
@@ -90,30 +91,99 @@ public class AdminOrderServlet extends HttpServlet {
         }
     }
 
-
     // ==========================================
-    // LIST ALL ORDERS
+    // LIST / FILTER / SEARCH ORDERS
     // ==========================================
-        private void listOrders(
+    private void listOrders(
             HttpServletRequest request,
             HttpServletResponse response)
             throws ServletException, IOException {
 
         // ==========================================
+        // STATUS FILTER
+        // ==========================================
+        String selectedStatus
+                = request.getParameter("status");
+
+        // Default filter = All
+        if (selectedStatus == null
+                || selectedStatus.trim().isEmpty()) {
+
+            selectedStatus = "All";
+        }
+
+        // Only allow valid order status
+        if (!selectedStatus.equalsIgnoreCase("All")
+                && !selectedStatus.equalsIgnoreCase("Pending")
+                && !selectedStatus.equalsIgnoreCase("Preparing")
+                && !selectedStatus.equalsIgnoreCase("Ready")
+                && !selectedStatus.equalsIgnoreCase("Completed")
+                && !selectedStatus.equalsIgnoreCase("Cancelled")) {
+
+            selectedStatus = "All";
+        }
+
+        // ==========================================
+        // SEARCH BY ORDER ID
+        // ==========================================
+        String searchText
+                = request.getParameter("search");
+
+        if (searchText == null) {
+
+            searchText = "";
+        }
+
+        searchText
+                = searchText.trim();
+
+        Integer searchOrderId = null;
+
+        boolean invalidSearch = false;
+
+        // Only process search if user typed something
+        if (!searchText.isEmpty()) {
+
+            // Allow both:
+            // 155
+            // #155
+            String cleanSearch
+                    = searchText
+                            .replace("#", "")
+                            .trim();
+
+            try {
+
+                searchOrderId
+                        = Integer.parseInt(cleanSearch);
+
+                if (searchOrderId <= 0) {
+
+                    invalidSearch = true;
+                }
+
+            } catch (NumberFormatException e) {
+
+                invalidSearch = true;
+            }
+        }
+
+        // ==========================================
         // PAGINATION
         // ==========================================
         int currentPage = 1;
+
         int recordsPerPage = 5;
 
         try {
 
-            String pageParam =
-                    request.getParameter("page");
+            String pageParam
+                    = request.getParameter("page");
 
             if (pageParam != null) {
 
-                currentPage =
-                        Integer.parseInt(pageParam);
+                currentPage
+                        = Integer.parseInt(pageParam);
             }
 
             if (currentPage < 1) {
@@ -126,15 +196,26 @@ public class AdminOrderServlet extends HttpServlet {
             currentPage = 1;
         }
 
-
         // ==========================================
-        // COUNT TOTAL ORDERS
+        // COUNT FILTERED RECORDS
         // ==========================================
-        int totalRecords =
-                orderDAO.getOrderCount();
+        int totalRecords;
 
-        int totalPages =
-                (int) Math.ceil(
+        if (invalidSearch) {
+
+            totalRecords = 0;
+
+        } else {
+
+            totalRecords
+                    = orderDAO.getOrderCount(
+                            selectedStatus,
+                            searchOrderId
+                    );
+        }
+
+        int totalPages
+                = (int) Math.ceil(
                         (double) totalRecords
                         / recordsPerPage
                 );
@@ -149,16 +230,26 @@ public class AdminOrderServlet extends HttpServlet {
             currentPage = totalPages;
         }
 
-
         // ==========================================
-        // GET ONLY 5 ORDERS FOR CURRENT PAGE
+        // GET ORDERS FOR CURRENT PAGE
         // ==========================================
-        List<Order> orderList =
-                orderDAO.getOrdersByPage(
-                        currentPage,
-                        recordsPerPage
-                );
+        List<Order> orderList;
 
+        if (invalidSearch) {
+
+            orderList
+                    = new ArrayList<>();
+
+        } else {
+
+            orderList
+                    = orderDAO.getOrdersByPage(
+                            currentPage,
+                            recordsPerPage,
+                            selectedStatus,
+                            searchOrderId
+                    );
+        }
 
         // ==========================================
         // SEND DATA TO JSP
@@ -183,6 +274,15 @@ public class AdminOrderServlet extends HttpServlet {
                 totalRecords
         );
 
+        request.setAttribute(
+                "selectedStatus",
+                selectedStatus
+        );
+
+        request.setAttribute(
+                "searchOrderId",
+                searchText
+        );
 
         request.getRequestDispatcher(
                 "/admin-order-list.jsp"
@@ -191,7 +291,6 @@ public class AdminOrderServlet extends HttpServlet {
                 response
         );
     }
-
 
     // ==========================================
     // VIEW ORDER DETAILS
@@ -213,8 +312,9 @@ public class AdminOrderServlet extends HttpServlet {
                             orderId
                     );
 
-
-            // Order not found
+            // ==================================
+            // ORDER NOT FOUND
+            // ==================================
             if (order == null) {
 
                 response.sendRedirect(
@@ -225,12 +325,10 @@ public class AdminOrderServlet extends HttpServlet {
                 return;
             }
 
-
             request.setAttribute(
                     "order",
                     order
             );
-
 
             request.getRequestDispatcher(
                     "/admin-order-view.jsp"
@@ -238,7 +336,6 @@ public class AdminOrderServlet extends HttpServlet {
                     request,
                     response
             );
-
 
         } catch (NumberFormatException e) {
 
