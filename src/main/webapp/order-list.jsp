@@ -364,6 +364,44 @@
             background: #fde2e2;
             color: #9b2c2c;
         }
+        
+        /* ================= PAGINATION ================= */
+
+        .pagination {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 14px;
+            padding: 20px;
+            border-top: 1px solid #eee4da;
+        }
+
+        .page-btn {
+            border: none;
+            background: #3b2314;
+            color: white;
+            padding: 9px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 12px;
+        }
+
+        .page-btn:hover {
+            background: #6f4e37;
+        }
+
+        .page-btn:disabled {
+            background: #d8cec5;
+            color: #8b7769;
+            cursor: not-allowed;
+        }
+
+        .page-info {
+            font-size: 13px;
+            font-weight: bold;
+            color: #5c4637;
+        }
 
         /* ================= EMPTY ================= */
 
@@ -915,6 +953,36 @@
                 No orders available.
             </div>
 
+        <% } %>    
+
+        <% if (!searchPerformed
+                && orderList != null
+                && !orderList.isEmpty()) { %>
+
+            <div class="pagination"
+                 id="pagination">
+
+                <button type="button"
+                        class="page-btn"
+                        id="prevBtn"
+                        onclick="changePage(-1)">
+                    Previous
+                </button>
+
+                <span class="page-info"
+                      id="pageInfo">
+                    Page 1 of 1
+                </span>
+
+                <button type="button"
+                        class="page-btn"
+                        id="nextBtn"
+                        onclick="changePage(1)">
+                    Next
+                </button>
+
+            </div>
+
         <% } %>
 
     </div>
@@ -1246,55 +1314,199 @@
 
 
     // ==============================
-    // FILTER ORDERS BY STATUS
+// FILTER + PAGINATION
+// ==============================
+
+let currentPage = 1;
+let currentFilter = "All";
+
+const recordsPerPage = 5;
+
+
+// ==============================
+// DISPLAY CURRENT PAGE
+// ==============================
+
+function displayOrders() {
+
+    const rows =
+        Array.from(
+            document.querySelectorAll(".order-row")
+        );
+
+    const empty =
+        document.getElementById("filterEmpty");
+
+    const pagination =
+        document.getElementById("pagination");
+
+    const prevBtn =
+        document.getElementById("prevBtn");
+
+    const nextBtn =
+        document.getElementById("nextBtn");
+
+    const pageInfo =
+        document.getElementById("pageInfo");
+
+
+    // Get orders matching selected status
+    const filteredRows =
+        rows.filter(row => {
+
+            const rowStatus =
+                row.dataset.status;
+
+            return currentFilter === "All"
+                || rowStatus.toLowerCase()
+                === currentFilter.toLowerCase();
+        });
+
+
+    // Calculate pages
+    const totalPages =
+        Math.ceil(
+            filteredRows.length
+            / recordsPerPage
+        );
+
+
+    // Prevent invalid page
+    if (currentPage > totalPages
+            && totalPages > 0) {
+
+        currentPage = totalPages;
+    }
+
+
+    // Hide all rows first
+    rows.forEach(row => {
+        row.style.display = "none";
+    });
+
+
+    // No matching orders
+    if (filteredRows.length === 0) {
+
+        if (empty) {
+            empty.style.display = "block";
+        }
+
+        if (pagination) {
+            pagination.style.display = "none";
+        }
+
+        return;
+    }
+
+
+    if (empty) {
+        empty.style.display = "none";
+    }
+
+
+    // Determine records for current page
+    const start =
+        (currentPage - 1)
+        * recordsPerPage;
+
+    const end =
+        start + recordsPerPage;
+
+
+    filteredRows
+        .slice(start, end)
+        .forEach(row => {
+
+            row.style.display = "grid";
+        });
+
+
+    // Pagination controls
+    if (pagination) {
+
+        pagination.style.display =
+            "flex";
+    }
+
+
+    if (pageInfo) {
+
+        pageInfo.textContent =
+            "Page "
+            + currentPage
+            + " of "
+            + totalPages;
+    }
+
+
+    if (prevBtn) {
+
+        prevBtn.disabled =
+            currentPage <= 1;
+    }
+
+
+    if (nextBtn) {
+
+        nextBtn.disabled =
+            currentPage >= totalPages;
+    }
+    }
+
+
+    // ==============================
+    // CHANGE PAGE
+    // ==============================
+
+    function changePage(direction) {
+
+        currentPage += direction;
+
+        displayOrders();
+    }
+
+
+    // ==============================
+    // FILTER ORDERS
     // ==============================
 
     function filterOrders(status, button) {
 
-        const rows =
-            document.querySelectorAll(".order-row");
-
         const tabs =
             document.querySelectorAll(".tab");
 
-        const empty =
-            document.getElementById("filterEmpty");
 
         tabs.forEach(tab =>
             tab.classList.remove("active")
         );
 
+
         button.classList.add("active");
 
-        let visible = 0;
 
-        rows.forEach(row => {
+        // Save selected filter
+        currentFilter = status;
 
-            const rowStatus =
-                row.dataset.status;
-
-            if (status === "All"
-                    || rowStatus.toLowerCase()
-                    === status.toLowerCase()) {
-
-                row.style.display = "grid";
-                visible++;
-
-            } else {
-
-                row.style.display = "none";
-            }
-        });
+        // Every new filter starts page 1
+        currentPage = 1;
 
 
-        if (empty) {
-
-            empty.style.display =
-                visible === 0
-                    ? "block"
-                    : "none";
-        }
+        displayOrders();
     }
+
+
+    // ==============================
+    // INITIAL DISPLAY
+    // ==============================
+
+    document.addEventListener(
+        "DOMContentLoaded",
+        function () {
+
+            displayOrders();
+        }
+    );
 
 </script>
 
