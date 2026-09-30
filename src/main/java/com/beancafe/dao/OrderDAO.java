@@ -15,204 +15,342 @@ import java.util.List;
 
 public class OrderDAO implements OrderDAOInterface {
 
-    // CREATE - Create new order
+    // ==========================================
+    // CREATE - CREATE NEW ORDER
+    // ==========================================
+    @Override
     public boolean addOrder(Order order) {
 
-        String orderSql = "INSERT INTO orders "
+        String orderSql
+                = "INSERT INTO orders "
                 + "(staff_id, order_date, total_price, status) "
                 + "VALUES (?, ?, ?, ?)";
 
-        String itemSql = "INSERT INTO order_items "
+        String itemSql
+                = "INSERT INTO order_items "
                 + "(order_id, menu_id, quantity, subtotal) "
                 + "VALUES (?, ?, ?, ?)";
 
-        String historySql = "INSERT INTO order_history "
+        String historySql
+                = "INSERT INTO order_history "
                 + "(order_id, status, updated_at) "
                 + "VALUES (?, ?, ?)";
 
         Connection conn = null;
 
         try {
-            conn = DBConnection.getConnection();
+
+            conn
+                    = DBConnection.getConnection();
+
             conn.setAutoCommit(false);
 
             int orderId;
 
-            // 1. Insert into ORDERS
-            try (PreparedStatement orderStmt = conn.prepareStatement(
-                    orderSql, PreparedStatement.RETURN_GENERATED_KEYS)) {
+            // ==================================
+            // 1. INSERT ORDER
+            // ==================================
+            try (PreparedStatement orderStmt
+                    = conn.prepareStatement(
+                            orderSql,
+                            PreparedStatement.RETURN_GENERATED_KEYS)) {
 
-                orderStmt.setInt(1, order.getStaffId());
+                orderStmt.setInt(
+                        1,
+                        order.getStaffId()
+                );
+
                 orderStmt.setTimestamp(
-                        2, Timestamp.valueOf(order.getOrderDate()));
-                orderStmt.setDouble(3, order.getTotalPrice());
-                orderStmt.setString(4, order.getStatus());
+                        2,
+                        Timestamp.valueOf(
+                                order.getOrderDate()
+                        )
+                );
+
+                orderStmt.setDouble(
+                        3,
+                        order.getTotalPrice()
+                );
+
+                orderStmt.setString(
+                        4,
+                        order.getStatus()
+                );
 
                 orderStmt.executeUpdate();
 
-                try (ResultSet rs = orderStmt.getGeneratedKeys()) {
+                try (ResultSet rs
+                        = orderStmt.getGeneratedKeys()) {
 
                     if (rs.next()) {
-                        orderId = rs.getInt(1);
-                        order.setOrderId(orderId);
+
+                        orderId
+                                = rs.getInt(1);
+
+                        order.setOrderId(
+                                orderId
+                        );
+
                     } else {
+
                         conn.rollback();
+
                         return false;
                     }
                 }
             }
 
-            // 2. Insert ORDER ITEMS
-            for (OrderItem item : order.getItems()) {
+            // ==================================
+            // 2. INSERT ORDER ITEMS
+            // ==================================
+            for (OrderItem item
+                    : order.getItems()) {
 
-                try (PreparedStatement itemStmt =
-                        conn.prepareStatement(itemSql)) {
+                try (PreparedStatement itemStmt
+                        = conn.prepareStatement(
+                                itemSql)) {
 
-                    itemStmt.setInt(1, orderId);
-                    itemStmt.setInt(2, item.getMenuId());
-                    itemStmt.setInt(3, item.getQuantity());
-                    itemStmt.setDouble(4, item.getSubtotal());
+                    itemStmt.setInt(
+                            1,
+                            orderId
+                    );
+
+                    itemStmt.setInt(
+                            2,
+                            item.getMenuId()
+                    );
+
+                    itemStmt.setInt(
+                            3,
+                            item.getQuantity()
+                    );
+
+                    itemStmt.setDouble(
+                            4,
+                            item.getSubtotal()
+                    );
 
                     itemStmt.executeUpdate();
                 }
             }
 
-            // 3. Insert initial ORDER HISTORY
-            try (PreparedStatement historyStmt =
-                    conn.prepareStatement(historySql)) {
+            // ==================================
+            // 3. INSERT INITIAL ORDER HISTORY
+            // ==================================
+            try (PreparedStatement historyStmt
+                    = conn.prepareStatement(
+                            historySql)) {
 
-                historyStmt.setInt(1, orderId);
-                historyStmt.setString(2, order.getStatus());
+                historyStmt.setInt(
+                        1,
+                        orderId
+                );
+
+                historyStmt.setString(
+                        2,
+                        order.getStatus()
+                );
+
                 historyStmt.setTimestamp(
-                        3, Timestamp.valueOf(order.getOrderDate()));
+                        3,
+                        Timestamp.valueOf(
+                                order.getOrderDate()
+                        )
+                );
 
                 historyStmt.executeUpdate();
             }
 
             conn.commit();
+
             return true;
 
         } catch (SQLException e) {
 
             if (conn != null) {
+
                 try {
+
                     conn.rollback();
+
                 } catch (SQLException ex) {
+
                     ex.printStackTrace();
                 }
             }
 
             e.printStackTrace();
+
             return false;
 
         } finally {
 
             if (conn != null) {
+
                 try {
+
                     conn.setAutoCommit(true);
+
                     conn.close();
+
                 } catch (SQLException e) {
+
                     e.printStackTrace();
                 }
             }
         }
     }
 
-
-    // READ - Get all orders
+    // ==========================================
+    // READ - GET ALL ORDERS
+    // ==========================================
+    @Override
     public List<Order> getAllOrders() {
 
-        List<Order> orderList = new ArrayList<>();
+        List<Order> orderList
+                = new ArrayList<>();
 
-        String sql = "SELECT * FROM orders ORDER BY order_id";
+        String sql
+                = "SELECT * FROM orders "
+                + "ORDER BY order_id";
 
-        try (Connection conn = DBConnection.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql);
-             ResultSet rs = stmt.executeQuery()) {
+        try (Connection conn
+                = DBConnection.getConnection(); PreparedStatement stmt
+                = conn.prepareStatement(sql); ResultSet rs
+                = stmt.executeQuery()) {
 
             while (rs.next()) {
 
-                Order order = new Order();
+                Order order
+                        = new Order();
 
-                order.setOrderId(rs.getInt("order_id"));
-                order.setStaffId(rs.getInt("staff_id"));
+                order.setOrderId(
+                        rs.getInt("order_id")
+                );
 
-                Timestamp timestamp = rs.getTimestamp("order_date");
+                order.setStaffId(
+                        rs.getInt("staff_id")
+                );
+
+                Timestamp timestamp
+                        = rs.getTimestamp(
+                                "order_date"
+                        );
 
                 if (timestamp != null) {
-                    order.setOrderDate(timestamp.toLocalDateTime());
+
+                    order.setOrderDate(
+                            timestamp.toLocalDateTime()
+                    );
                 }
 
-                order.setTotalPrice(rs.getDouble("total_price"));
-                order.setStatus(rs.getString("status"));
+                order.setTotalPrice(
+                        rs.getDouble(
+                                "total_price"
+                        )
+                );
 
-                orderList.add(order);
+                order.setStatus(
+                        rs.getString(
+                                "status"
+                        )
+                );
+
+                orderList.add(
+                        order
+                );
             }
 
         } catch (SQLException e) {
+
             e.printStackTrace();
         }
 
         return orderList;
     }
-    
+
     // ==========================================
-    // ADMIN - Get orders with pagination
-    // Latest order first
+    // ADMIN - GET ORDERS WITH PAGINATION
+    // ORIGINAL METHOD
     // ==========================================
     public List<Order> getOrdersByPage(
             int page,
             int recordsPerPage) {
 
-        List<Order> orderList = new ArrayList<>();
+        List<Order> orderList
+                = new ArrayList<>();
 
-        int offset =
-                (page - 1) * recordsPerPage;
+        int offset
+                = (page - 1)
+                * recordsPerPage;
 
-        String sql =
-                "SELECT * FROM orders "
+        String sql
+                = "SELECT * FROM orders "
                 + "ORDER BY order_id DESC "
                 + "LIMIT ? OFFSET ?";
 
-        try (Connection conn = DBConnection.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
+        try (Connection conn
+                = DBConnection.getConnection(); PreparedStatement stmt
+                = conn.prepareStatement(sql)) {
 
-            stmt.setInt(1, recordsPerPage);
-            stmt.setInt(2, offset);
+            stmt.setInt(
+                    1,
+                    recordsPerPage
+            );
 
-            try (ResultSet rs = stmt.executeQuery()) {
+            stmt.setInt(
+                    2,
+                    offset
+            );
+
+            try (ResultSet rs
+                    = stmt.executeQuery()) {
 
                 while (rs.next()) {
 
-                    Order order = new Order();
+                    Order order
+                            = new Order();
 
                     order.setOrderId(
-                            rs.getInt("order_id")
+                            rs.getInt(
+                                    "order_id"
+                            )
                     );
 
                     order.setStaffId(
-                            rs.getInt("staff_id")
+                            rs.getInt(
+                                    "staff_id"
+                            )
                     );
 
-                    Timestamp timestamp =
-                            rs.getTimestamp("order_date");
+                    Timestamp timestamp
+                            = rs.getTimestamp(
+                                    "order_date"
+                            );
 
                     if (timestamp != null) {
 
                         order.setOrderDate(
-                                timestamp.toLocalDateTime()
+                                timestamp
+                                        .toLocalDateTime()
                         );
                     }
 
                     order.setTotalPrice(
-                            rs.getDouble("total_price")
+                            rs.getDouble(
+                                    "total_price"
+                            )
                     );
 
                     order.setStatus(
-                            rs.getString("status")
+                            rs.getString(
+                                    "status"
+                            )
                     );
 
-                    orderList.add(order);
+                    orderList.add(
+                            order
+                    );
                 }
             }
 
@@ -224,25 +362,27 @@ public class OrderDAO implements OrderDAOInterface {
         return orderList;
     }
 
-
     // ==========================================
-    // ADMIN - Count total orders
+    // ADMIN - COUNT ALL ORDERS
+    // ORIGINAL METHOD
     // ==========================================
     public int getOrderCount() {
 
         int totalRecords = 0;
 
-        String sql =
-                "SELECT COUNT(*) FROM orders";
+        String sql
+                = "SELECT COUNT(*) "
+                + "FROM orders";
 
-        try (Connection conn = DBConnection.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql);
-             ResultSet rs = stmt.executeQuery()) {
+        try (Connection conn
+                = DBConnection.getConnection(); PreparedStatement stmt
+                = conn.prepareStatement(sql); ResultSet rs
+                = stmt.executeQuery()) {
 
             if (rs.next()) {
 
-                totalRecords =
-                        rs.getInt(1);
+                totalRecords
+                        = rs.getInt(1);
             }
 
         } catch (SQLException e) {
@@ -253,155 +393,506 @@ public class OrderDAO implements OrderDAOInterface {
         return totalRecords;
     }
 
+    // ==========================================
+    // ADMIN - FILTER / SEARCH ORDERS
+    // WITH PAGINATION
+    // ==========================================
+    public List<Order> getOrdersByPage(
+            int page,
+            int recordsPerPage,
+            String status,
+            Integer searchOrderId) {
 
-    // READ - Search order by order ID
-    public Order getOrderById(int orderId) {
+        List<Order> orderList
+                = new ArrayList<>();
 
-        Order order = null;
+        int offset
+                = (page - 1)
+                * recordsPerPage;
 
-        String orderSql = "SELECT * FROM orders WHERE order_id = ?";
-        String itemSql =
-            "SELECT oi.*, m.menu_name "
-            + "FROM order_items oi "
-            + "JOIN menu m ON oi.menu_id = m.menu_id "
-            + "WHERE oi.order_id = ?";
+        StringBuilder sql
+                = new StringBuilder(
+                        "SELECT * FROM orders "
+                        + "WHERE 1=1 "
+                );
 
-        try (Connection conn = DBConnection.getConnection();
-             PreparedStatement orderStmt =
-                     conn.prepareStatement(orderSql)) {
+        boolean filterStatus
+                = status != null
+                && !status.equalsIgnoreCase(
+                        "All"
+                );
 
-            orderStmt.setInt(1, orderId);
+        // Add status filter
+        if (filterStatus) {
 
-            try (ResultSet rs = orderStmt.executeQuery()) {
+            sql.append(
+                    "AND status = ? "
+            );
+        }
 
-                if (rs.next()) {
+        // Add Order ID search
+        if (searchOrderId != null) {
 
-                    order = new Order();
+            sql.append(
+                    "AND order_id = ? "
+            );
+        }
 
-                    order.setOrderId(rs.getInt("order_id"));
-                    order.setStaffId(rs.getInt("staff_id"));
+        sql.append(
+                "ORDER BY order_id DESC "
+                + "LIMIT ? OFFSET ?"
+        );
 
-                    Timestamp timestamp = rs.getTimestamp("order_date");
+        try (Connection conn
+                = DBConnection.getConnection(); PreparedStatement stmt
+                = conn.prepareStatement(
+                        sql.toString())) {
+
+            int parameterIndex = 1;
+
+            // Status parameter
+            if (filterStatus) {
+
+                stmt.setString(
+                        parameterIndex++,
+                        status
+                );
+            }
+
+            // Order ID parameter
+            if (searchOrderId != null) {
+
+                stmt.setInt(
+                        parameterIndex++,
+                        searchOrderId
+                );
+            }
+
+            // Pagination parameters
+            stmt.setInt(
+                    parameterIndex++,
+                    recordsPerPage
+            );
+
+            stmt.setInt(
+                    parameterIndex,
+                    offset
+            );
+
+            try (ResultSet rs
+                    = stmt.executeQuery()) {
+
+                while (rs.next()) {
+
+                    Order order
+                            = new Order();
+
+                    order.setOrderId(
+                            rs.getInt(
+                                    "order_id"
+                            )
+                    );
+
+                    order.setStaffId(
+                            rs.getInt(
+                                    "staff_id"
+                            )
+                    );
+
+                    Timestamp timestamp
+                            = rs.getTimestamp(
+                                    "order_date"
+                            );
 
                     if (timestamp != null) {
-                        order.setOrderDate(timestamp.toLocalDateTime());
+
+                        order.setOrderDate(
+                                timestamp
+                                        .toLocalDateTime()
+                        );
                     }
 
-                    order.setTotalPrice(rs.getDouble("total_price"));
-                    order.setStatus(rs.getString("status"));
+                    order.setTotalPrice(
+                            rs.getDouble(
+                                    "total_price"
+                            )
+                    );
+
+                    order.setStatus(
+                            rs.getString(
+                                    "status"
+                            )
+                    );
+
+                    orderList.add(
+                            order
+                    );
                 }
             }
 
-            // Get items belonging to the order
+        } catch (SQLException e) {
+
+            e.printStackTrace();
+        }
+
+        return orderList;
+    }
+
+    // ==========================================
+    // ADMIN - COUNT FILTERED ORDERS
+    // ==========================================
+    public int getOrderCount(
+            String status,
+            Integer searchOrderId) {
+
+        int totalRecords = 0;
+
+        StringBuilder sql
+                = new StringBuilder(
+                        "SELECT COUNT(*) "
+                        + "FROM orders "
+                        + "WHERE 1=1 "
+                );
+
+        boolean filterStatus
+                = status != null
+                && !status.equalsIgnoreCase(
+                        "All"
+                );
+
+        // Status filter
+        if (filterStatus) {
+
+            sql.append(
+                    "AND status = ? "
+            );
+        }
+
+        // Search by Order ID
+        if (searchOrderId != null) {
+
+            sql.append(
+                    "AND order_id = ? "
+            );
+        }
+
+        try (Connection conn
+                = DBConnection.getConnection(); PreparedStatement stmt
+                = conn.prepareStatement(
+                        sql.toString())) {
+
+            int parameterIndex = 1;
+
+            if (filterStatus) {
+
+                stmt.setString(
+                        parameterIndex++,
+                        status
+                );
+            }
+
+            if (searchOrderId != null) {
+
+                stmt.setInt(
+                        parameterIndex,
+                        searchOrderId
+                );
+            }
+
+            try (ResultSet rs
+                    = stmt.executeQuery()) {
+
+                if (rs.next()) {
+
+                    totalRecords
+                            = rs.getInt(1);
+                }
+            }
+
+        } catch (SQLException e) {
+
+            e.printStackTrace();
+        }
+
+        return totalRecords;
+    }
+
+    // ==========================================
+    // READ - GET ONE ORDER BY ID
+    // ==========================================
+    @Override
+    public Order getOrderById(
+            int orderId) {
+
+        Order order = null;
+
+        String orderSql
+                = "SELECT * FROM orders "
+                + "WHERE order_id = ?";
+
+        String itemSql
+                = "SELECT oi.*, m.menu_name "
+                + "FROM order_items oi "
+                + "JOIN menu m "
+                + "ON oi.menu_id = m.menu_id "
+                + "WHERE oi.order_id = ?";
+
+        try (Connection conn
+                = DBConnection.getConnection(); PreparedStatement orderStmt
+                = conn.prepareStatement(
+                        orderSql)) {
+
+            orderStmt.setInt(
+                    1,
+                    orderId
+            );
+
+            try (ResultSet rs
+                    = orderStmt.executeQuery()) {
+
+                if (rs.next()) {
+
+                    order
+                            = new Order();
+
+                    order.setOrderId(
+                            rs.getInt(
+                                    "order_id"
+                            )
+                    );
+
+                    order.setStaffId(
+                            rs.getInt(
+                                    "staff_id"
+                            )
+                    );
+
+                    Timestamp timestamp
+                            = rs.getTimestamp(
+                                    "order_date"
+                            );
+
+                    if (timestamp != null) {
+
+                        order.setOrderDate(
+                                timestamp
+                                        .toLocalDateTime()
+                        );
+                    }
+
+                    order.setTotalPrice(
+                            rs.getDouble(
+                                    "total_price"
+                            )
+                    );
+
+                    order.setStatus(
+                            rs.getString(
+                                    "status"
+                            )
+                    );
+                }
+            }
+
+            // ==================================
+            // GET ORDER ITEMS
+            // ==================================
             if (order != null) {
 
-                try (PreparedStatement itemStmt =
-                        conn.prepareStatement(itemSql)) {
+                try (PreparedStatement itemStmt
+                        = conn.prepareStatement(
+                                itemSql)) {
 
-                    itemStmt.setInt(1, orderId);
+                    itemStmt.setInt(
+                            1,
+                            orderId
+                    );
 
-                    try (ResultSet rs = itemStmt.executeQuery()) {
+                    try (ResultSet rs
+                            = itemStmt.executeQuery()) {
 
                         while (rs.next()) {
 
-                            OrderItem item = new OrderItem();
+                            OrderItem item
+                                    = new OrderItem();
 
                             item.setOrderItemId(
-                                    rs.getInt("order_item_id"));
-                            item.setOrderId(rs.getInt("order_id"));
-                            item.setMenuId(rs.getInt("menu_id"));
-                            item.setMenuName(rs.getString("menu_name"));
-                            item.setQuantity(rs.getInt("quantity"));
-                            item.setSubtotal(rs.getDouble("subtotal"));
+                                    rs.getInt(
+                                            "order_item_id"
+                                    )
+                            );
 
-                            order.addItem(item);
+                            item.setOrderId(
+                                    rs.getInt(
+                                            "order_id"
+                                    )
+                            );
+
+                            item.setMenuId(
+                                    rs.getInt(
+                                            "menu_id"
+                                    )
+                            );
+
+                            item.setMenuName(
+                                    rs.getString(
+                                            "menu_name"
+                                    )
+                            );
+
+                            item.setQuantity(
+                                    rs.getInt(
+                                            "quantity"
+                                    )
+                            );
+
+                            item.setSubtotal(
+                                    rs.getDouble(
+                                            "subtotal"
+                                    )
+                            );
+
+                            order.addItem(
+                                    item
+                            );
                         }
                     }
                 }
             }
 
         } catch (SQLException e) {
+
             e.printStackTrace();
         }
 
         return order;
     }
 
+    // ==========================================
+    // UPDATE ORDER STATUS
+    // ==========================================
+    @Override
+    public boolean updateOrderStatus(
+            int orderId,
+            String status) {
 
-    // UPDATE - Update order status
-    public boolean updateOrderStatus(int orderId, String status) {
+        String orderSql
+                = "UPDATE orders "
+                + "SET status = ? "
+                + "WHERE order_id = ?";
 
-        String orderSql =
-                "UPDATE orders SET status = ? WHERE order_id = ?";
-
-        String historySql = "INSERT INTO order_history "
+        String historySql
+                = "INSERT INTO order_history "
                 + "(order_id, status, updated_at) "
                 + "VALUES (?, ?, CURRENT_TIMESTAMP)";
 
         Connection conn = null;
 
         try {
-            conn = DBConnection.getConnection();
+
+            conn
+                    = DBConnection.getConnection();
+
             conn.setAutoCommit(false);
 
-            // Update current status
-            try (PreparedStatement orderStmt =
-                    conn.prepareStatement(orderSql)) {
+            // ==================================
+            // UPDATE CURRENT STATUS
+            // ==================================
+            try (PreparedStatement orderStmt
+                    = conn.prepareStatement(
+                            orderSql)) {
 
-                orderStmt.setString(1, status);
-                orderStmt.setInt(2, orderId);
+                orderStmt.setString(
+                        1,
+                        status
+                );
 
-                int affectedRows = orderStmt.executeUpdate();
+                orderStmt.setInt(
+                        2,
+                        orderId
+                );
+
+                int affectedRows
+                        = orderStmt.executeUpdate();
 
                 if (affectedRows == 0) {
+
                     conn.rollback();
+
                     return false;
                 }
             }
 
-            // Save status change into history
-            try (PreparedStatement historyStmt =
-                    conn.prepareStatement(historySql)) {
+            // ==================================
+            // SAVE STATUS HISTORY
+            // ==================================
+            try (PreparedStatement historyStmt
+                    = conn.prepareStatement(
+                            historySql)) {
 
-                historyStmt.setInt(1, orderId);
-                historyStmt.setString(2, status);
+                historyStmt.setInt(
+                        1,
+                        orderId
+                );
+
+                historyStmt.setString(
+                        2,
+                        status
+                );
 
                 historyStmt.executeUpdate();
             }
 
             conn.commit();
+
             return true;
 
         } catch (SQLException e) {
 
             if (conn != null) {
+
                 try {
+
                     conn.rollback();
+
                 } catch (SQLException ex) {
+
                     ex.printStackTrace();
                 }
             }
 
             e.printStackTrace();
+
             return false;
 
         } finally {
 
             if (conn != null) {
+
                 try {
+
                     conn.setAutoCommit(true);
+
                     conn.close();
+
                 } catch (SQLException e) {
+
                     e.printStackTrace();
                 }
             }
         }
     }
 
+    // ==========================================
+    // DELETE / CANCEL ORDER
+    // ==========================================
+    @Override
+    public boolean cancelOrder(
+            int orderId) {
 
-    // DELETE - Cancel order
-    public boolean cancelOrder(int orderId) {
-
-        return updateOrderStatus(orderId, "Cancelled");
+        return updateOrderStatus(
+                orderId,
+                "Cancelled"
+        );
     }
 }
