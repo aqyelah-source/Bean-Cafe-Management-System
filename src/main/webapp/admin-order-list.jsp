@@ -19,31 +19,60 @@
     // ==========================================
     List<Order> orderList
             = (List<Order>) request.getAttribute(
-                    "orderList");
-    
-        Integer currentPageObj
+                    "orderList"
+            );
+
+    Integer currentPageObj
             = (Integer) request.getAttribute(
-                    "currentPage");
+                    "currentPage"
+            );
 
     Integer totalPagesObj
             = (Integer) request.getAttribute(
-                    "totalPages");
+                    "totalPages"
+            );
 
     int currentPage
             = currentPageObj != null
-            ? currentPageObj : 1;
+                    ? currentPageObj
+                    : 1;
 
     int totalPages
             = totalPagesObj != null
-            ? totalPagesObj : 1;
-                    
+                    ? totalPagesObj
+                    : 1;
+
+    // ==========================================
+    // GET CURRENT FILTER
+    // ==========================================
+    String selectedStatus
+            = (String) request.getAttribute(
+                    "selectedStatus"
+            );
+
+    if (selectedStatus == null) {
+
+        selectedStatus = "All";
+    }
+
+    // ==========================================
+    // GET CURRENT SEARCH
+    // ==========================================
+    String searchOrderId
+            = (String) request.getAttribute(
+                    "searchOrderId"
+            );
+
+    if (searchOrderId == null) {
+
+        searchOrderId = "";
+    }
 %>
 
 
 <!DOCTYPE html>
 
 <html>
-
 
     <head>
 
@@ -74,7 +103,6 @@
                 color:
                     #2f1b10;
             }
-
 
 
             /* =========================
@@ -197,7 +225,6 @@
             }
 
 
-
             /* =========================
                MAIN LAYOUT
                ========================= */
@@ -210,7 +237,6 @@
                 min-height:
                     calc(100vh - 82px);
             }
-
 
 
             /* =========================
@@ -297,7 +323,6 @@
             }
 
 
-
             /* =========================
                CONTENT
                ========================= */
@@ -351,6 +376,224 @@
             }
 
 
+            /* =========================
+               FILTER AND SEARCH
+               ========================= */
+
+            .filter-card {
+
+                background:
+                    #fffaf5;
+
+                border:
+                    1px solid #e4d7ca;
+
+                border-radius:
+                    14px;
+
+                padding:
+                    20px;
+
+                margin-bottom:
+                    22px;
+            }
+
+
+            .status-filter {
+
+                display:
+                    flex;
+
+                flex-wrap:
+                    wrap;
+
+                gap:
+                    10px;
+
+                margin-bottom:
+                    18px;
+            }
+
+
+            .filter-btn {
+
+                display:
+                    inline-flex;
+
+                align-items:
+                    center;
+
+                justify-content:
+                    center;
+
+                min-width:
+                    74px;
+
+                padding:
+                    10px 18px;
+
+                border:
+                    1px solid #d8c7b7;
+
+                border-radius:
+                    24px;
+
+                background:
+                    white;
+
+                color:
+                    #4b2e1e;
+
+                text-decoration:
+                    none;
+
+                font-size:
+                    14px;
+            }
+
+
+            .filter-btn:hover {
+
+                background:
+                    #f1e3d6;
+            }
+
+
+            .filter-btn.active {
+
+                background:
+                    #4b2e1e;
+
+                color:
+                    white;
+
+                border-color:
+                    #4b2e1e;
+            }
+
+
+            .search-form {
+
+                display:
+                    flex;
+
+                gap:
+                    10px;
+            }
+
+
+            .search-input {
+
+                flex:
+                    1;
+
+                min-width:
+                    0;
+
+                height:
+                    46px;
+
+                padding:
+                    0 16px;
+
+                border:
+                    1px solid #d8c7b7;
+
+                border-radius:
+                    8px;
+
+                background:
+                    white;
+
+                color:
+                    #2f1b10;
+
+                font-size:
+                    15px;
+
+                outline:
+                    none;
+            }
+
+
+            .search-input:focus {
+
+                border-color:
+                    #7a573e;
+            }
+
+
+            .btn-search,
+            .btn-show-all {
+
+                height:
+                    46px;
+
+                padding:
+                    0 22px;
+
+                border:
+                    none;
+
+                border-radius:
+                    8px;
+
+                font-size:
+                    14px;
+
+                font-weight:
+                    bold;
+
+                cursor:
+                    pointer;
+
+                display:
+                    inline-flex;
+
+                align-items:
+                    center;
+
+                justify-content:
+                    center;
+
+                text-decoration:
+                    none;
+            }
+
+
+            .btn-search {
+
+                background:
+                    #6f4e37;
+
+                color:
+                    white;
+            }
+
+
+            .btn-search:hover {
+
+                background:
+                    #4b2e1e;
+            }
+
+
+            .btn-show-all {
+
+                background:
+                    #eadccc;
+
+                color:
+                    #321b0f;
+            }
+
+
+            .btn-show-all:hover {
+
+                background:
+                    #d8c4b2;
+            }
+
 
             /* =========================
                TABLE CARD
@@ -396,7 +639,6 @@
                 font-size:
                     14px;
             }
-
 
 
             /* =========================
@@ -481,7 +723,6 @@
             }
 
 
-
             /* =========================
                STATUS
                ========================= */
@@ -555,7 +796,6 @@
             }
 
 
-
             /* =========================
                VIEW DETAILS BUTTON
                ========================= */
@@ -601,6 +841,86 @@
             }
 
 
+            /* =========================
+               PAGINATION
+               ========================= */
+
+            .pagination {
+
+                display:
+                    flex;
+
+                justify-content:
+                    center;
+
+                align-items:
+                    center;
+
+                gap:
+                    14px;
+
+                margin-top:
+                    22px;
+            }
+
+
+            .page-btn {
+
+                padding:
+                    9px 16px;
+
+                background:
+                    #4b2e1e;
+
+                color:
+                    white;
+
+                text-decoration:
+                    none;
+
+                border-radius:
+                    8px;
+
+                font-size:
+                    14px;
+
+                font-weight:
+                    bold;
+            }
+
+
+            .page-btn:hover {
+
+                background:
+                    #6f4e37;
+            }
+
+
+            .page-btn.disabled {
+
+                background:
+                    #ddd0c3;
+
+                color:
+                    #927b68;
+
+                cursor:
+                    default;
+            }
+
+
+            .page-info {
+
+                font-size:
+                    14px;
+
+                font-weight:
+                    bold;
+
+                color:
+                    #4b2e1e;
+            }
+
 
             /* =========================
                RESPONSIVE
@@ -613,54 +933,28 @@
                     width:
                         190px;
                 }
+
+
+                .search-form {
+
+                    flex-wrap:
+                        wrap;
+                }
+
+
+                .search-input {
+
+                    flex-basis:
+                        100%;
+                }
             }
-            
-            /* =========================
-                PAGINATION
-                ========================= */
-
-             .pagination {
-                 display: flex;
-                 justify-content: center;
-                 align-items: center;
-                 gap: 14px;
-                 margin-top: 22px;
-             }
-
-             .page-btn {
-                 padding: 9px 16px;
-                 background: #4b2e1e;
-                 color: white;
-                 text-decoration: none;
-                 border-radius: 8px;
-                 font-size: 14px;
-                 font-weight: bold;
-             }
-
-             .page-btn:hover {
-                 background: #6f4e37;
-             }
-
-             .page-btn.disabled {
-                 background: #ddd0c3;
-                 color: #927b68;
-                 cursor: default;
-             }
-
-             .page-info {
-                 font-size: 14px;
-                 font-weight: bold;
-                 color: #4b2e1e;
-             }
 
         </style>
 
     </head>
 
 
-
     <body>
-
 
 
         <!-- =========================
@@ -714,10 +1008,7 @@
         </header>
 
 
-
-
         <div class="main-layout">
-
 
 
             <!-- =========================
@@ -726,39 +1017,61 @@
 
             <div class="sidebar">
 
+
                 <div class="sidebar-title">
+
                     Admin Menu
+
                 </div>
+
 
                 <a class="menu-item"
                    href="${pageContext.request.contextPath}/admin-dashboard">
+
                     Dashboard
+
                 </a>
+
 
                 <a class="menu-item"
                    href="${pageContext.request.contextPath}/admin-staff">
+
                     Staff Management
+
                 </a>
+
 
                 <a class="menu-item"
                    href="${pageContext.request.contextPath}/menu">
+
                     Menu Management
+
                 </a>
+
 
                 <a class="menu-item active"
                    href="${pageContext.request.contextPath}/admin-order">
+
                     Order Management
+
                 </a>
+
 
                 <a class="menu-item"
                    href="${pageContext.request.contextPath}/order-history">
+
                     Order History
+
                 </a>
+
 
                 <a class="menu-item"
                    href="${pageContext.request.contextPath}/report">
+
                     Order Summary & Report
+
                 </a>
+
 
             </div>
 
@@ -769,6 +1082,10 @@
 
             <main class="content">
 
+
+                <!-- =========================
+                     PAGE HEADING
+                     ========================= -->
 
                 <div class="page-heading">
 
@@ -793,6 +1110,154 @@
                 </div>
 
 
+                <!-- =========================
+                     FILTER AND SEARCH
+                     ========================= -->
+
+                <div class="filter-card">
+
+
+                    <!-- STATUS FILTER -->
+
+                    <div class="status-filter">
+
+
+                        <!-- ALL -->
+
+                        <a class="filter-btn
+                           <%= "All".equalsIgnoreCase(
+                                   selectedStatus)
+                                           ? "active"
+                                           : ""%>"
+                           href="${pageContext.request.contextPath}/admin-order?status=All">
+
+                            All
+
+                        </a>
+
+
+                        <!-- PENDING -->
+
+                        <a class="filter-btn
+                           <%= "Pending".equalsIgnoreCase(
+                                   selectedStatus)
+                                           ? "active"
+                                           : ""%>"
+                           href="${pageContext.request.contextPath}/admin-order?status=Pending">
+
+                            Pending
+
+                        </a>
+
+
+                        <!-- PREPARING -->
+
+                        <a class="filter-btn
+                           <%= "Preparing".equalsIgnoreCase(
+                                   selectedStatus)
+                                           ? "active"
+                                           : ""%>"
+                           href="${pageContext.request.contextPath}/admin-order?status=Preparing">
+
+                            Preparing
+
+                        </a>
+
+
+                        <!-- READY -->
+
+                        <a class="filter-btn
+                           <%= "Ready".equalsIgnoreCase(
+                                   selectedStatus)
+                                           ? "active"
+                                           : ""%>"
+                           href="${pageContext.request.contextPath}/admin-order?status=Ready">
+
+                            Ready
+
+                        </a>
+
+
+                        <!-- COMPLETED -->
+
+                        <a class="filter-btn
+                           <%= "Completed".equalsIgnoreCase(
+                                   selectedStatus)
+                                           ? "active"
+                                           : ""%>"
+                           href="${pageContext.request.contextPath}/admin-order?status=Completed">
+
+                            Completed
+
+                        </a>
+
+
+                        <!-- CANCELLED -->
+
+                        <a class="filter-btn
+                           <%= "Cancelled".equalsIgnoreCase(
+                                   selectedStatus)
+                                           ? "active"
+                                           : ""%>"
+                           href="${pageContext.request.contextPath}/admin-order?status=Cancelled">
+
+                            Cancelled
+
+                        </a>
+
+
+                    </div>
+
+
+                    <!-- =========================
+                         SEARCH FORM
+                         ========================= -->
+
+                    <form class="search-form"
+                          action="${pageContext.request.contextPath}/admin-order"
+                          method="get">
+
+
+                        <!-- KEEP SELECTED STATUS -->
+
+                        <input type="hidden"
+                               name="status"
+                               value="<%= selectedStatus%>">
+
+
+                        <!-- ORDER ID -->
+
+                        <input class="search-input"
+                               type="text"
+                               name="search"
+                               value="<%= searchOrderId%>"
+                               placeholder="Search by Order No...">
+
+
+                        <!-- SEARCH -->
+
+                        <button class="btn-search"
+                                type="submit">
+
+                            Search
+
+                        </button>
+
+
+                        <!-- SHOW ALL -->
+
+                        <a class="btn-show-all"
+                           href="${pageContext.request.contextPath}/admin-order">
+
+                            Show All
+
+                        </a>
+
+
+                    </form>
+
+
+                </div>
 
 
                 <!-- =========================
@@ -817,7 +1282,6 @@
                     </p>
 
 
-
                     <table>
 
 
@@ -828,32 +1292,44 @@
 
 
                                 <th>
+
                                     Order No.
+
                                 </th>
 
 
                                 <th>
+
                                     Order Date
+
                                 </th>
 
 
                                 <th>
+
                                     Staff
+
                                 </th>
 
 
                                 <th>
+
                                     Total Price
+
                                 </th>
 
 
                                 <th>
+
                                     Status
+
                                 </th>
 
 
                                 <th>
+
                                     Action
+
                                 </th>
 
 
@@ -861,7 +1337,6 @@
 
 
                         </thead>
-
 
 
                         <tbody>
@@ -920,7 +1395,6 @@
                                 </td>
 
 
-
                                 <!-- ORDER DATE -->
 
                                 <td>
@@ -928,7 +1402,6 @@
                                     <%= order.getOrderDate()%>
 
                                 </td>
-
 
 
                                 <!-- STAFF -->
@@ -940,8 +1413,7 @@
                                 </td>
 
 
-
-                                <!-- TOTAL -->
+                                <!-- TOTAL PRICE -->
 
                                 <td>
 
@@ -951,7 +1423,6 @@
                                             order.getTotalPrice())%>
 
                                 </td>
-
 
 
                                 <!-- STATUS -->
@@ -969,16 +1440,17 @@
                                 </td>
 
 
-
                                 <!-- ACTION -->
 
                                 <td>
 
 
                                     <a class="btn-view"
-                                        href="${pageContext.request.contextPath}/admin-order?action=view&id=<%= order.getOrderId()%>">
-                                         View Details
-                                     </a>
+                                       href="${pageContext.request.contextPath}/admin-order?action=view&id=<%= order.getOrderId()%>">
+
+                                        View Details
+
+                                    </a>
 
 
                                 </td>
@@ -1017,57 +1489,90 @@
 
 
                     </table>
-                            
-                            <div class="pagination">
-
-                            <% if (currentPage > 1) { %>
-
-                                <a class="page-btn"
-                                   href="${pageContext.request.contextPath}/admin-order?page=<%= currentPage - 1 %>">
-
-                                    &laquo; Previous
-
-                                </a>
-
-                            <% } else { %>
-
-                                <span class="page-btn disabled">
-
-                                    &laquo; Previous
-
-                                </span>
-
-                            <% } %>
 
 
-                            <span class="page-info">
+                    <!-- =========================
+                         PAGINATION
+                         ========================= -->
 
-                                Page <%= currentPage %>
-                                of <%= totalPages %>
-
-                            </span>
+                    <div class="pagination">
 
 
-                            <% if (currentPage < totalPages) { %>
+                        <!-- PREVIOUS -->
 
-                                <a class="page-btn"
-                                   href="${pageContext.request.contextPath}/admin-order?page=<%= currentPage + 1 %>">
+                        <%
+                            if (currentPage > 1) {
+                        %>
 
-                                    Next &raquo;
 
-                                </a>
+                        <a class="page-btn"
+                           href="${pageContext.request.contextPath}/admin-order?page=<%= currentPage - 1%>&amp;status=<%= selectedStatus%>&amp;search=<%= searchOrderId%>">
 
-                            <% } else { %>
+                            &laquo; Previous
 
-                                <span class="page-btn disabled">
+                        </a>
 
-                                    Next &raquo;
 
-                                </span>
+                        <%
+                        } else {
+                        %>
 
-                            <% } %>
 
-                        </div>
+                        <span class="page-btn disabled">
+
+                            &laquo; Previous
+
+                        </span>
+
+
+                        <%
+                            }
+                        %>
+
+
+                        <!-- PAGE INFORMATION -->
+
+                        <span class="page-info">
+
+                            Page <%= currentPage%>
+                            of <%= totalPages%>
+
+                        </span>
+
+
+                        <!-- NEXT -->
+
+                        <%
+                            if (currentPage < totalPages) {
+                        %>
+
+
+                        <a class="page-btn"
+                           href="${pageContext.request.contextPath}/admin-order?page=<%= currentPage + 1%>&amp;status=<%= selectedStatus%>&amp;search=<%= searchOrderId%>">
+
+                            Next &raquo;
+
+                        </a>
+
+
+                        <%
+                        } else {
+                        %>
+
+
+                        <span class="page-btn disabled">
+
+                            Next &raquo;
+
+                        </span>
+
+
+                        <%
+                            }
+                        %>
+
+
+                    </div>
 
 
                 </div>
