@@ -1314,186 +1314,186 @@
 
 
     // ==============================
-// FILTER + PAGINATION
-// ==============================
+    // FILTER + PAGINATION
+    // ==============================
 
-let currentPage = 1;
-let currentFilter = "All";
+    let currentPage = 1;
+    let currentFilter = "All";
 
-const recordsPerPage = 5;
-
-
-// ==============================
-// DISPLAY CURRENT PAGE
-// ==============================
-
-function displayOrders() {
-
-    const rows =
-        Array.from(
-            document.querySelectorAll(".order-row")
-        );
-
-    const empty =
-        document.getElementById("filterEmpty");
-
-    const pagination =
-        document.getElementById("pagination");
-
-    const prevBtn =
-        document.getElementById("prevBtn");
-
-    const nextBtn =
-        document.getElementById("nextBtn");
-
-    const pageInfo =
-        document.getElementById("pageInfo");
+    const recordsPerPage = 5;
 
 
-    // Get orders matching selected status
-    const filteredRows =
-        rows.filter(row => {
+    // ==============================
+    // DISPLAY CURRENT PAGE
+    // ==============================
 
-            const rowStatus =
-                row.dataset.status;
+    function displayOrders() {
 
-            return currentFilter === "All"
-                || rowStatus.toLowerCase()
-                === currentFilter.toLowerCase();
+        const rows =
+            Array.from(
+                document.querySelectorAll(".order-row")
+            );
+
+        const empty =
+            document.getElementById("filterEmpty");
+
+        const pagination =
+            document.getElementById("pagination");
+
+        const prevBtn =
+            document.getElementById("prevBtn");
+
+        const nextBtn =
+            document.getElementById("nextBtn");
+
+        const pageInfo =
+            document.getElementById("pageInfo");
+
+
+        // Get orders matching selected status
+        const filteredRows =
+            rows.filter(row => {
+
+                const rowStatus =
+                    row.dataset.status;
+
+                return currentFilter === "All"
+                    || rowStatus.toLowerCase()
+                    === currentFilter.toLowerCase();
+            });
+
+
+        // Calculate pages
+        const totalPages =
+            Math.ceil(
+                filteredRows.length
+                / recordsPerPage
+            );
+
+
+        // Prevent invalid page
+        if (currentPage > totalPages
+                && totalPages > 0) {
+
+            currentPage = totalPages;
+        }
+
+
+        // Hide all rows first
+        rows.forEach(row => {
+            row.style.display = "none";
         });
 
 
-    // Calculate pages
-    const totalPages =
-        Math.ceil(
-            filteredRows.length
-            / recordsPerPage
-        );
+        // No matching orders
+        if (filteredRows.length === 0) {
 
+            if (empty) {
+                empty.style.display = "block";
+            }
 
-    // Prevent invalid page
-    if (currentPage > totalPages
-            && totalPages > 0) {
+            if (pagination) {
+                pagination.style.display = "none";
+            }
 
-        currentPage = totalPages;
-    }
+            return;
+        }
 
-
-    // Hide all rows first
-    rows.forEach(row => {
-        row.style.display = "none";
-    });
-
-
-    // No matching orders
-    if (filteredRows.length === 0) {
 
         if (empty) {
-            empty.style.display = "block";
+            empty.style.display = "none";
         }
 
+
+        // Determine records for current page
+        const start =
+            (currentPage - 1)
+            * recordsPerPage;
+
+        const end =
+            start + recordsPerPage;
+
+
+        filteredRows
+            .slice(start, end)
+            .forEach(row => {
+
+                row.style.display = "grid";
+            });
+
+
+        // Pagination controls
         if (pagination) {
-            pagination.style.display = "none";
+
+            pagination.style.display =
+                "flex";
         }
 
-        return;
-    }
+
+        if (pageInfo) {
+
+            pageInfo.textContent =
+                "Page "
+                + currentPage
+                + " of "
+                + totalPages;
+        }
 
 
-    if (empty) {
-        empty.style.display = "none";
-    }
+        if (prevBtn) {
+
+            prevBtn.disabled =
+                currentPage <= 1;
+        }
 
 
-    // Determine records for current page
-    const start =
-        (currentPage - 1)
-        * recordsPerPage;
+        if (nextBtn) {
 
-    const end =
-        start + recordsPerPage;
-
-
-    filteredRows
-        .slice(start, end)
-        .forEach(row => {
-
-            row.style.display = "grid";
-        });
+            nextBtn.disabled =
+                currentPage >= totalPages;
+        }
+        }
 
 
-    // Pagination controls
-    if (pagination) {
+        // ==============================
+        // CHANGE PAGE
+        // ==============================
 
-        pagination.style.display =
-            "flex";
-    }
+        function changePage(direction) {
 
+            currentPage += direction;
 
-    if (pageInfo) {
-
-        pageInfo.textContent =
-            "Page "
-            + currentPage
-            + " of "
-            + totalPages;
-    }
+            displayOrders();
+        }
 
 
-    if (prevBtn) {
+        // ==============================
+        // FILTER ORDERS
+        // ==============================
 
-        prevBtn.disabled =
-            currentPage <= 1;
-    }
+        function filterOrders(status, button) {
 
-
-    if (nextBtn) {
-
-        nextBtn.disabled =
-            currentPage >= totalPages;
-    }
-    }
+            const tabs =
+                document.querySelectorAll(".tab");
 
 
-    // ==============================
-    // CHANGE PAGE
-    // ==============================
-
-    function changePage(direction) {
-
-        currentPage += direction;
-
-        displayOrders();
-    }
+            tabs.forEach(tab =>
+                tab.classList.remove("active")
+            );
 
 
-    // ==============================
-    // FILTER ORDERS
-    // ==============================
-
-    function filterOrders(status, button) {
-
-        const tabs =
-            document.querySelectorAll(".tab");
+            button.classList.add("active");
 
 
-        tabs.forEach(tab =>
-            tab.classList.remove("active")
-        );
+            // Save selected filter
+            currentFilter = status;
+
+            // Every new filter starts page 1
+            currentPage = 1;
 
 
-        button.classList.add("active");
-
-
-        // Save selected filter
-        currentFilter = status;
-
-        // Every new filter starts page 1
-        currentPage = 1;
-
-
-        displayOrders();
-    }
+            displayOrders();
+        }
 
 
     // ==============================

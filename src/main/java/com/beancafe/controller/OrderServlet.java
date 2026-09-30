@@ -38,7 +38,7 @@ public class OrderServlet extends HttpServlet {
 
 
     // ==========================================
-    // HANDLE GET REQUESTS
+    // HANDLE GET REQUESTS (take date)
     // ==========================================
     @Override
     protected void doGet(HttpServletRequest request,
@@ -91,7 +91,7 @@ public class OrderServlet extends HttpServlet {
 
 
     // ==========================================
-    // HANDLE POST REQUESTS
+    // HANDLE POST REQUESTS (sent data)
     // ==========================================
     @Override
     protected void doPost(HttpServletRequest request,
