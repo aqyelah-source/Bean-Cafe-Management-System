@@ -6,14 +6,16 @@
     // Only Staff can access this page
     if (session.getAttribute("role") == null ||
         !"Staff".equalsIgnoreCase((String) session.getAttribute("role"))) {
-
+        //if not staff it will return login
         response.sendRedirect("login.jsp");
         return;
     }
-
+    
+    //take data from menu, then save as menulist
     List<Menu> menuList =
             (List<Menu>) request.getAttribute("menuList");
-
+    
+    //check if have any error if have return error
     String error = request.getParameter("error");
 %>
 
@@ -497,7 +499,7 @@
                 Select menu items for the customer's order.
             </p>
 
-
+            <!-- if error it will display -->
             <% if ("staff".equals(error)) { %>
 
                 <div class="message">
@@ -586,7 +588,8 @@
                                             ? ""
                                             : menu.getCategory();
                 %>
-
+                    
+                    <!-- available or unavailable--->
                     <div class="menu-card <%= available ? "available" : "unavailable" %>"
                         data-id="<%= menu.getMenuId() %>"
                         data-name="<%= menu.getMenuName() %>"
